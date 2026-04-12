@@ -1,0 +1,97 @@
+---
+import { getLiveEntry } from 'astro:content'
+import Base from '@layouts/Base.astro'
+
+export const prerender = false
+
+const { slug } = Astro.params
+const { entry: product, error, cacheHint } = await getLiveEntry('storeProducts', slug!)
+
+if (error || !product) {
+  return Astro.rewrite('/404')
+}
+
+if (cacheHint) Astro.cache.set(cacheHint)
+Astro.cache.set({ maxAge: 600, swr: 60, tags: [`product-${product.data.slug}`, 'products'] })
+
+const { title, featuredImage, mediaGallery, infoPanel } = product.data
+---
+
+<Base title={`${title} — mönk`}>
+  <main>
+    <article>
+      <h1>{title}</h1>
+
+      {mediaGallery?.items?.length > 0 && (
+        <section class="gallery">
+          <p>Gallery: {mediaGallery.items.length} items</p>
+        </section>
+      )}
+
+      {infoPanel && infoPanel.length > 0 && (
+        <aside class="info-panel">
+          {infoPanel.map((block: any) => (
+            <div class={`block-${block.blockType}`}>
+              {block.blockType === 'info-item' && (
+                <div>
+                  <h3>{block.title}</h3>
+                </div>
+              )}
+              {block.blockType === 'table' && (
+                <dl>
+                  {block.rows?.map((row: any) => (
+                    <>
+                      <dt>{row.label}</dt>
+                      <dd>{/* Lexical render row.value */}</dd>
+                    </>
+                  ))}
+                </dl>
+              )}
+            </div>
+          ))}
+        </aside>
+      )}
+    </article>
+  </main>
+</Base>
+
+<style lang="scss">
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  article {
+    h1 {
+      margin-bottom: 0.5rem;
+    }
+
+    .gallery {
+      margin: 2rem 0;
+      padding: 2rem;
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+    }
+
+    .info-panel {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+
+      dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.5rem 1.5rem;
+
+        dt {
+          font-weight: 600;
+          color: var(--text-muted);
+        }
+      }
+    }
+  }
+</style>

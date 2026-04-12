@@ -1,0 +1,47 @@
+---
+import { ClientRouter } from 'astro:transitions'
+import { SEO } from 'astro-seo'
+
+// SCSS imports — order matters for @layer cascade
+import '@styles/_layers.scss'
+import '@styles/_reset.scss'
+import '@styles/_colors.scss'
+import '@styles/_base.scss'
+import '@styles/utilities.scss'
+
+interface Props {
+  title: string
+  description?: string
+  image?: string
+  noindex?: boolean
+}
+
+const { title, description, image, noindex = false } = Astro.props
+const canonicalURL = new URL(Astro.url.pathname, Astro.site)
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <SEO
+      title={title}
+      description={description}
+      canonical={canonicalURL.href}
+      openGraph={{
+        basic: {
+          title,
+          type: 'website',
+          image: image ?? '',
+        },
+      }}
+      noindex={noindex}
+    />
+    <ClientRouter fallback="swap" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

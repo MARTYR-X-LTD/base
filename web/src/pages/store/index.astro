@@ -1,0 +1,57 @@
+---
+import { getLiveCollection } from 'astro:content'
+import Base from '@layouts/Base.astro'
+
+export const prerender = false
+
+const { entries: products, cacheHint } = await getLiveCollection('storeProducts')
+
+if (cacheHint) Astro.cache.set(cacheHint)
+Astro.cache.set({ maxAge: 600, swr: 60, tags: ['products'] })
+---
+
+<Base title="Store — mönk" description="Products from mönk creative studio">
+  <main>
+    <h1>Store</h1>
+    <div class="store-grid">
+      {products.map((product) => (
+        <a href={`/store/${product.data.slug}`}>
+          <h2>{product.data.title}</h2>
+        </a>
+      ))}
+    </div>
+  </main>
+</Base>
+
+<style lang="scss">
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  h1 {
+    margin-bottom: 2rem;
+  }
+
+  .store-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .store-grid a {
+    display: block;
+    padding: 1.5rem;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    transition: border-color 0.15s ease;
+
+    @include hover {
+      &:hover {
+        border-color: var(--accent);
+      }
+    }
+  }
+</style>

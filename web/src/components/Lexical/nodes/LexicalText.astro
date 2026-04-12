@@ -1,0 +1,41 @@
+---
+import type { SerializedTextNode } from '@payloadcms/richtext-lexical'
+import { TEXT_FORMAT } from '@types/lexical'
+
+interface Props {
+  node: SerializedTextNode
+}
+
+const { node } = Astro.props
+
+const isBold = node.format & TEXT_FORMAT.BOLD
+const isItalic = node.format & TEXT_FORMAT.ITALIC
+const isUnderline = node.format & TEXT_FORMAT.UNDERLINE
+const isStrikethrough = node.format & TEXT_FORMAT.STRIKETHROUGH
+const isCode = node.format & TEXT_FORMAT.CODE
+---
+
+{#if isCode}
+  <code class="lexical-code">{node.text}</code>
+{:else}
+  <span
+    class:isBold
+    class:isItalic
+    class:isUnderline
+    class:isStrikethrough
+  >{node.text}</span>
+{/if}
+
+<style lang="scss">
+  .isBold { font-weight: 700; }
+  .isItalic { font-style: italic; }
+  .isUnderline { text-decoration: underline; }
+  .isStrikethrough { text-decoration: line-through; }
+  .lexical-code {
+    font-family: 'Fira Code', monospace;
+    background: var(--surface-raised);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+  }
+</style>

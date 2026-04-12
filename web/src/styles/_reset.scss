@@ -1,0 +1,75 @@
+/*
+   Josh's Custom CSS Reset
+   https://www.joshwcomeau.com/css/custom-css-reset/
+   */
+
+@layer reset {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+  }
+  body {
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+  }
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    overflow-wrap: break-word;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: inherit;
+  }
+  #root,
+  #__next {
+    isolation: isolate;
+  }
+  :where(a),
+  :where(a:visited) {
+    color: inherit;
+  }
+  button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+    text-transform: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+    padding: 0;
+    margin: 0;
+  }
+  dialog {
+    padding: 0;
+    margin: auto;
+  }
+  [popover] {
+    border: none;
+    background: none;
+    padding: 0;
+  }
+}

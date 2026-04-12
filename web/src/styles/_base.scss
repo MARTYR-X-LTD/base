@@ -1,0 +1,44 @@
+@layer base {
+  html {
+    font-family: 'Roboto', system-ui, sans-serif;
+    background-color: var(--surface);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @include roboto-body;
+  }
+
+  h1 {
+    @include roboto-display;
+    font-weight: 700;
+  }
+
+  h2 {
+    @include roboto-heading;
+    font-weight: 600;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  a {
+    color: var(--accent);
+    transition: color 0.15s ease;
+
+    @include hover {
+      &:hover {
+        color: var(--text);
+      }
+    }
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--surface);
+  }
+}

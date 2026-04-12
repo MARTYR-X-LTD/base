@@ -1,0 +1,14 @@
+services:
+  postgres:
+    restart: always
+    image: postgres:18
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: monk-cms
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+      
+volumes:
+  pgdata:

@@ -1,0 +1,49 @@
+---
+import type { LexicalNode } from '@types/lexical'
+import LexicalText from './nodes/LexicalText.astro'
+import LexicalParagraph from './nodes/LexicalParagraph.astro'
+import LexicalHeading from './nodes/LexicalHeading.astro'
+import LexicalList from './nodes/LexicalList.astro'
+import LexicalLink from './nodes/LexicalLink.astro'
+import LexicalQuote from './nodes/LexicalQuote.astro'
+import LexicalHorizontalRule from './nodes/LexicalHorizontalRule.astro'
+
+interface Props {
+  nodes: LexicalNode[]
+}
+
+const { nodes } = Astro.props
+
+function getNodeComponent(node: LexicalNode) {
+  const typeMap: Record<string, any> = {
+    text: LexicalText,
+    paragraph: LexicalParagraph,
+    heading: LexicalHeading,
+    list: LexicalList,
+    listitem: LexicalList,
+    link: LexicalLink,
+    quote: LexicalQuote,
+    horizontalrule: LexicalHorizontalRule,
+    linebreak: 'br',
+  }
+
+  return typeMap[node.type] || null
+}
+---
+
+{
+  nodes &&
+    nodes.map((node: LexicalNode) => {
+      const Component = getNodeComponent(node)
+
+      if (!Component) {
+        return null
+      }
+
+      if (typeof Component === 'string') {
+        return <Component />
+      }
+
+      return <Component node={node} />
+    })
+}

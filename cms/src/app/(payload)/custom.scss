@@ -1,0 +1,53 @@
+/**
+ * Custom Payload admin panel styles
+ * Using @layer payload to ensure proper specificity without !important
+ * PayloadCMS uses @layer payload-default, so @layer payload takes precedence
+ */
+@import '~@payloadcms/ui/scss';
+
+@layer payload {
+  /* Set color-scheme based on data-theme attribute */
+  html[data-theme='dark'] {
+    color-scheme: dark;
+  }
+
+  html[data-theme='light'] {
+    color-scheme: light;
+  }
+
+  /* Document controls header (appears on edit pages) */
+  .doc-controls:before {
+    opacity: 0.85; /* Increase from default 0.3 for better visibility */
+  }
+
+  .doc-controls:after {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px); /* Increase from default 8px for more blur */
+  }
+
+  /* Table cell vertical alignment (list views) */
+  .table th,
+  .table td {
+    vertical-align: middle;
+  }
+
+  /* Align block headers within collapsible rows */
+  .collapsible__header-wrap {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Vertically center row fields, prevent wrapping */
+  .field-type.row {
+    align-items: center;
+  }
+
+  .field-type.row .row__fields {
+    flex-wrap: nowrap;
+  }
+
+  /* Login page logo sizing */
+  .login__brand {
+    max-width: 9rem;
+  }
+}

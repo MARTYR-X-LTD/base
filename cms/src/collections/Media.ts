@@ -1,0 +1,339 @@
+// cms/src/collections/Media.ts
+import type { CollectionConfig } from 'payload'
+import { nanoid } from 'nanoid'
+import { isAdmin, isAuthenticated } from '@/lib/access-control'
+import type { Media as MediaType } from '@/payload-types'
+
+export const Media: CollectionConfig = {
+  slug: 'media',
+
+  // Controls which fields are included when Media is populated as a relationship
+  // (e.g., when fetching Works/StoreProducts with depth >= 1).
+  //
+  // This does NOT affect:
+  //   - Direct Media queries (/api/media/{id}) — always return all fields
+  //   - Admin panel Media edit page — fetches the full document directly
+  //
+  // Fields listed as `false` are excluded from relationship populations only.
+  // Using exclude mode so new fields are automatically included without updating this.
+  defaultPopulate: {
+    processingMetadata: false,
+    avifQuality: false,
+    r2Url: false,
+  },
+
+  upload: {
+    disableLocalStorage: true, // All files go to R2 via processors
+    mimeTypes: [
+      'image/png',
+      'image/jpeg',
+      'image/webp',
+      'image/svg+xml',
+      'image/avif',
+      'video/mp4',
+      'video/webm',
+      'video/quicktime',
+      'model/gltf-binary', // 3D assets (no processing, manual upload)
+    ],
+    focalPoint: false,
+    crop: false,
+    adminThumbnail: ({ doc }) => {
+      const media = doc as Partial<MediaType>
+
+      // Videos: use generated thumbnail
+      if (media.mimeType?.startsWith('video/') && media.thumbnailURL) {
+        return media.thumbnailURL
+      }
+      // SVGs: use R2 URL directly
+      if (media.mimeType === 'image/svg+xml' && media.url) {
+        return media.url
+      }
+      // AVIF images: smallest variant for fast admin preview
+      if (Array.isArray(media.variants) && media.variants.length > 0) {
+        const sorted = [...media.variants].sort((a, b) => (a.width || 0) - (b.width || 0))
+        return sorted[0]?.url || null
+      }
+      // Return null if no variants/thumbnail (PayloadCMS shows placeholder)
+      return null
+    },
+    // Note: filename is preserved via beforeChange hook setting data.filename = req.file.name
+  },
+
+  access: {
+    create: isAdmin,
+    read: isAuthenticated,
+    update: isAdmin,
+    delete: isAdmin,
+  },
+
+  admin: {
+    components: {
+      edit: {
+        SaveButton: '@/components/UploadSaveButton#UploadSaveButton',
+      },
+    },
+  },
+
+  fields: [
+    {
+      name: 'filename',
+      type: 'text',
+      unique: false,
+      index: true,
+      admin: { readOnly: true },
+    },
+    {
+      // Overrides Payload's auto-generated ID so we control the value used in R2 filenames
+      name: 'id',
+      type: 'text',
+      hooks: {
+        beforeValidate: [({ value }) => value || nanoid()],
+      },
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+        description: 'Auto-generated. Used as prefix for R2 filenames.',
+        components: {
+          Cell: '@/components/IdCell#IdCell',
+        },
+      },
+    },
+    {
+      name: 'alt',
+      type: 'text',
+    },
+    {
+      // Internal: generated video thumbnail URL. Cleaned from API response by plugin.
+      name: 'thumbnailURL',
+      type: 'text',
+      admin: { readOnly: true, hidden: true },
+    },
+    {
+      name: 'mediaType',
+      type: 'select',
+      options: [
+        { label: 'Image', value: 'image' },
+        { label: 'SVG', value: 'svg' },
+        { label: 'Video', value: 'video' },
+        { label: '3D', value: '3d' },
+      ],
+      admin: { readOnly: true, position: 'sidebar' },
+    },
+    {
+      name: 'videoMetadata',
+      type: 'group',
+      admin: {
+        condition: (data) => Boolean(data.mimeType?.startsWith('video/')),
+        position: 'sidebar',
+        description: 'Extracted automatically on upload',
+      },
+      fields: [
+        { name: 'duration', type: 'number', admin: { readOnly: true, description: 'seconds' } },
+        { name: 'fps', type: 'number', admin: { readOnly: true } },
+        {
+          name: 'autoplay',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: { description: 'Start playing automatically' },
+        },
+        {
+          name: 'muted',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: { description: 'Mute audio (required for autoplay)' },
+        },
+        {
+          name: 'loop',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: { description: 'Loop playback infinitely' },
+        },
+        {
+          name: 'controls',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: { description: 'Show playback controls' },
+        },
+        {
+          name: 'playsinline',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: { description: 'Play inline on iOS (no fullscreen)' },
+        },
+      ],
+    },
+    {
+      // AVIF variants generated by media-processor. Cleaned from SVG/video API responses by plugins.
+      name: 'variants',
+      type: 'array',
+      admin: {
+        readOnly: true,
+        description: 'Auto-generated AVIF variants',
+        condition: (data) =>
+          Boolean(data.id) &&
+          data.mimeType !== 'image/svg+xml' &&
+          !data.mimeType?.startsWith('video/'),
+      },
+      fields: [
+        {
+          name: 'url',
+          type: 'text',
+          required: true,
+          admin: {
+            readOnly: true,
+            components: {
+              Field: '@/components/UrlLinkField#UrlLinkField',
+            },
+          },
+        },
+        {
+          type: 'row',
+          fields: [
+            { name: 'width', type: 'number', required: true, admin: { readOnly: true, width: '33%' } },
+            { name: 'height', type: 'number', required: true, admin: { readOnly: true, width: '33%' } },
+            {
+              name: 'fileSize',
+              type: 'number',
+              admin: {
+                readOnly: true,
+                width: '34%',
+                components: {
+                  Field: '@/components/FileSizeNumberField#FileSizeNumberField',
+                  Cell: '@/components/FileSizeCell#FileSizeCell',
+                },
+              },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      // Processing info (timing, sizes, quality). Never exposed in API.
+      name: 'processingMetadata',
+      type: 'group',
+      label: 'Processing Info',
+      admin: {
+        readOnly: true,
+        condition: (data) =>
+          Boolean(data.id) &&
+          data.mimeType !== 'image/svg+xml' &&
+          !data.mimeType?.startsWith('video/'),
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            { name: 'variants', type: 'text', label: 'Variants', admin: { readOnly: true, width: '70%' } },
+            {
+              name: 'processedAt',
+              type: 'date',
+              label: 'Processed',
+              admin: {
+                readOnly: true,
+                width: '30%',
+                date: { displayFormat: 'MMM d, yyyy h:mm a' },
+              },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      // Inline SVG content for direct HTML embedding (e.g. hero icons, cover images).
+      // Only present for SVG files. Stripped from non-SVG API responses by svg-processor.
+      name: 'svgContent',
+      type: 'textarea',
+      admin: {
+        readOnly: true,
+        description: 'SVG markup for inline HTML use (XML declaration stripped)',
+        condition: (data) => data.mimeType === 'image/svg+xml',
+        rows: 10,
+      },
+    },
+    {
+      // The actual R2 URL, stored so we can restore it after Payload reconstructs it from filename.
+      // Stripped from API responses by processors after restoration.
+      name: 'r2Url',
+      type: 'text',
+      admin: { readOnly: true, hidden: true },
+    },
+    // Note: r2Url is used internally by SVG and video processors to restore URLs
+    // after PayloadCMS reconstruction, but deleted in afterRead hooks before API response.
+    // Note: avifQuality field (advanced AVIF encoding settings) is dynamically injected
+    // by the mediaProcessor plugin based on configured sizes.
+    // See src/plugins/media-processor/index.ts for dynamic field generation.
+  ],
+
+  hooks: {
+    beforeDelete: [
+      async ({ req, id }) => {
+        const { payload } = req
+
+        // Clean singleMedia blocks from a mediaGallery.items array.
+        // Returns the cleaned items and whether anything changed.
+        const cleanGalleryItems = (
+          items: any[],
+          mediaId: string,
+        ): { items: any[]; modified: boolean } => {
+          if (!Array.isArray(items)) return { items: [], modified: false }
+
+          let modified = false
+          const cleaned = items
+            .map((block) => {
+              if (block.blockType !== 'singleMedia') return block
+              const blockMediaId =
+                typeof block.media === 'object' && block.media !== null
+                  ? block.media.id
+                  : block.media
+              if (blockMediaId === mediaId) {
+                modified = true
+                return null // Remove entire block
+              }
+              return block
+            })
+            .filter((block) => block !== null)
+
+          return { items: cleaned, modified }
+        }
+
+        // Clean mediaGallery references from Works
+        const works = await payload.find({
+          collection: 'works',
+          limit: 1000,
+          req,
+        })
+        for (const work of works.docs) {
+          if (!(work as any).mediaGallery?.items?.length) continue
+          const result = cleanGalleryItems((work as any).mediaGallery.items, id as string)
+          if (result.modified) {
+            await payload.update({
+              collection: 'works',
+              id: work.id,
+              data: { mediaGallery: { ...(work as any).mediaGallery, items: result.items } } as any,
+              req,
+            })
+          }
+        }
+
+        // Clean mediaGallery references from StoreProducts
+        const products = await payload.find({
+          collection: 'store-products',
+          limit: 1000,
+          req,
+        })
+        for (const product of products.docs) {
+          if (!(product as any).mediaGallery?.items?.length) continue
+          const result = cleanGalleryItems((product as any).mediaGallery.items, id as string)
+          if (result.modified) {
+            await payload.update({
+              collection: 'store-products',
+              id: product.id,
+              data: { mediaGallery: { ...(product as any).mediaGallery, items: result.items } } as any,
+              req,
+            })
+          }
+        }
+      },
+    ],
+  },
+}

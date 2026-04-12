@@ -1,0 +1,71 @@
+// =============================================================================
+// DEVICE QUERIES
+// =============================================================================
+
+@mixin hover {
+  @media (hover: hover) and (pointer: fine) {
+    @content;
+  }
+}
+
+@mixin coarse {
+  @media (pointer: coarse) {
+    @content;
+  }
+}
+
+// =============================================================================
+// ICON SYSTEM
+// =============================================================================
+
+@mixin svg-icon-class {
+  width: var(--i-s--width, var(--i-s--size, 1em));
+  height: var(--i-s--height, var(--i-s--size, 1em));
+  color: var(--i-s--color, currentColor);
+  margin-inline: var(--i-s--margin-inline, 0);
+  margin-bottom: var(--i-s--bottom-offset, 0em);
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+@mixin svg-icon-svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: var(--i-s--stroke-width, 0);
+}
+
+// =============================================================================
+// TYPOGRAPHY — Roboto
+// =============================================================================
+
+@mixin roboto-display {
+  font-size: 2.5rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+@mixin roboto-heading {
+  font-size: 1.75rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+@mixin roboto-body {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+@mixin roboto-small {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+@mixin roboto-xs {
+  font-size: 0.75rem;
+  line-height: 1.4;
+}

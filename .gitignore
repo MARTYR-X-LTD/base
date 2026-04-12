@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build output
+web/dist/
+cms/dist/
+cms/build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Payload
+cms/media/
+
+# Astro
+web/.astro/
+
+# PNPM
+.pnpm-debug.log
+
+# Database backups (local)
+cms/db-backups/

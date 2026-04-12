@@ -1,0 +1,33 @@
+---
+import type { SerializedListNode, SerializedListItemNode } from '@payloadcms/richtext-lexical'
+import type { LexicalNode } from '@types/lexical'
+import LexicalRenderer from '@components/Lexical/LexicalRenderer.astro'
+
+interface Props {
+  node: SerializedListNode | SerializedListItemNode
+}
+
+const { node } = Astro.props
+---
+
+{#if node.type === 'list'}
+  {#if node.tag === 'ul'}
+    <ul>
+      {#if 'children' in node}
+        <LexicalRenderer nodes={node.children as LexicalNode[]} />
+      {/if}
+    </ul>
+  {:else}
+    <ol>
+      {#if 'children' in node}
+        <LexicalRenderer nodes={node.children as LexicalNode[]} />
+      {/if}
+    </ol>
+  {/if}
+{:else if node.type === 'listitem'}
+  <li>
+    {#if 'children' in node}
+      <LexicalRenderer nodes={node.children as LexicalNode[]} />
+    {/if}
+  </li>
+{/if}

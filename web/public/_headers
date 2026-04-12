@@ -1,0 +1,15 @@
+# Versioned assets — immutable
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Static images
+/*.png
+  Cache-Control: public, max-age=604800, immutable
+/*.svg
+  Cache-Control: public, max-age=604800, immutable
+/*.ico
+  Cache-Control: public, max-age=604800, immutable
+
+# Staging — prevent indexing
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex

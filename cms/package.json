@@ -1,0 +1,54 @@
+{
+  "name": "monk-cms",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.30.3",
+  "scripts": {
+    "dev": "pnpm payload generate:importmap && cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
+    "serve": "payload serve",
+    "migrate": "cross-env NODE_OPTIONS=--no-deprecation payload migrate",
+    "migrate:create": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:create",
+    "migrate:status": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:status",
+    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
+    "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
+    "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
+    "typecheck": "tsc --noEmit",
+    "db:clone-prod": "./scripts/clone-prod-db.sh",
+    "approve-builds": "pnpm approve-builds"
+  },
+  "dependencies": {
+    "payload": "3.82.1",
+    "@payloadcms/db-postgres": "3.82.1",
+    "@payloadcms/next": "3.82.1",
+    "@payloadcms/richtext-lexical": "3.82.1",
+    "@payloadcms/ui": "3.82.1",
+    "@aws-sdk/client-s3": "^3.1001.0",
+    "@aws-sdk/lib-storage": "^3.1001.0",
+    "cross-env": "^10.1.0",
+    "next": "^16.1.6",
+    "node-av": "^5.2.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "sharp": "0.34.5",
+    "nanoid": "5.1.7"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "node-av",
+      "@seydx/node-av-darwin-arm64",
+      "@seydx/node-av-darwin-x64",
+      "@seydx/node-av-linux-arm64",
+      "@seydx/node-av-linux-x64"
+    ]
+  }
+}
