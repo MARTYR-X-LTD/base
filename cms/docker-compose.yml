@@ -6,9 +6,9 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: monk-cms
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - monk-cms-pgdata:/var/lib/postgresql
     ports:
       - "5432:5432"
       
 volumes:
-  pgdata:
+  monk-cms-pgdata:
