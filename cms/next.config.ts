@@ -6,9 +6,14 @@ const nextConfig: NextConfig = {
 
   serverExternalPackages: ['node-av', '@seydx/node-av-linux-x64'],
 
+  turbopack: {
+    root: __dirname,
+  },
+
   experimental: {
+    // Increase body size limit for video/image uploads (default is 1MB)
     serverActions: {
-      bodySizeLimit: '100mb',
+      bodySizeLimit: '100mb', // Allow up to 100MB uploads
     },
   },
 
