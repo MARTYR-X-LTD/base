@@ -6,6 +6,7 @@
   "packageManager": "pnpm@10.30.3",
   "scripts": {
     "dev": "astro dev",
+    "dev:prod-cms": "astro dev --mode prod-cms",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
