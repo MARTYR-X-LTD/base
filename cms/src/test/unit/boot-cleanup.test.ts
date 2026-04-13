@@ -54,6 +54,7 @@ beforeEach(() => {
 
 describe('runBootCleanup', () => {
   test('no-op when /tmp is empty', async () => {
+    console.log('[boot-cleanup] /tmp empty → no cleanup expected')
     vi.mocked(fs.readdir).mockResolvedValue([])
     const payload = makePayload()
 
@@ -64,9 +65,11 @@ describe('runBootCleanup', () => {
     expect(deleteMultipleFromR2).not.toHaveBeenCalled()
     expect(payload.logger.info).toHaveBeenCalledWith(expect.stringContaining('Found 0'))
     expect(payload.logger.info).toHaveBeenCalledWith(expect.stringContaining('Cleanup complete'))
+    console.log('[boot-cleanup] ✓ no-op confirmed')
   })
 
   test('doc exists → deletes temp file, no R2 cleanup', async () => {
+    console.log('[boot-cleanup] /tmp has abc123-original.jpg, doc exists in DB → temp file deleted, R2 untouched')
     vi.mocked(fs.readdir).mockResolvedValue(['abc123-original.jpg'] as any)
     vi.mocked(listR2Objects).mockResolvedValue([])
     const payload = makePayload({
@@ -81,9 +84,11 @@ describe('runBootCleanup', () => {
     expect(deleteTempFile).toHaveBeenCalledWith('/tmp/abc123-original.*')
     expect(listR2Objects).not.toHaveBeenCalled()
     expect(deleteMultipleFromR2).not.toHaveBeenCalled()
+    console.log('[boot-cleanup] ✓ temp file deleted, R2 untouched')
   })
 
   test('doc missing (404) → cleans R2 orphans + temp file', async () => {
+    console.log('[boot-cleanup] /tmp has abc123-original.png, doc is 404 → purge 2 R2 orphans + temp file')
     vi.mocked(fs.readdir).mockResolvedValue(['abc123-original.png'] as any)
     vi.mocked(listR2Objects)
       .mockResolvedValueOnce(['local/images/abc123-600w.avif', 'local/images/abc123-1200w.avif']) // image keys
@@ -104,9 +109,11 @@ describe('runBootCleanup', () => {
     )
     expect(deleteMultipleFromR2).toHaveBeenCalledWith([], expect.any(Object))
     expect(deleteTempFile).toHaveBeenCalledWith('/tmp/abc123-original.*')
+    console.log('[boot-cleanup] ✓ 2 R2 orphans purged, temp file deleted')
   })
 
   test('doc missing (404) with no R2 orphans → skips deleteMultipleFromR2', async () => {
+    console.log('[boot-cleanup] doc is 404 but no R2 orphans → only temp file deleted')
     vi.mocked(fs.readdir).mockResolvedValue(['abc123-original.jpg'] as any)
     vi.mocked(listR2Objects).mockResolvedValue([])
     const payload = makePayload({
@@ -117,9 +124,11 @@ describe('runBootCleanup', () => {
 
     expect(deleteMultipleFromR2).not.toHaveBeenCalled()
     expect(deleteTempFile).toHaveBeenCalledWith('/tmp/abc123-original.*')
+    console.log('[boot-cleanup] ✓ R2 delete skipped, temp file deleted')
   })
 
   test('findByID throws non-404 error → logs error, no cleanup', async () => {
+    console.log('[boot-cleanup] findByID throws 500 → log error, no cleanup')
     vi.mocked(fs.readdir).mockResolvedValue(['abc123-original.jpg'] as any)
     const payload = makePayload({
       findByID: () => Promise.reject({ status: 500 }),
@@ -130,10 +139,12 @@ describe('runBootCleanup', () => {
     expect(payload.logger.error).toHaveBeenCalledWith(expect.stringContaining('Error checking doc abc123'))
     expect(deleteTempFile).not.toHaveBeenCalled()
     expect(deleteMultipleFromR2).not.toHaveBeenCalled()
+    console.log('[boot-cleanup] ✓ error logged, nothing cleaned up')
   })
 
   test('avifenc leftover files are unlinked', async () => {
     // UUID-prefixed .avif/.png files from interrupted avifenc runs
+    console.log('[boot-cleanup] 2 UUID-prefixed avifenc leftovers in /tmp → unlinked directly')
     const avifencFile = 'a1b2c3d4-1234-5678-abcd-ef0123456789.avif'
     const avifencPng = 'a1b2c3d4-1234-5678-abcd-ef0123456789.png'
     vi.mocked(fs.readdir).mockResolvedValue([avifencFile, avifencPng] as any)
@@ -145,10 +156,12 @@ describe('runBootCleanup', () => {
     expect(fs.unlink).toHaveBeenCalledWith(`/tmp/${avifencFile}`)
     expect(fs.unlink).toHaveBeenCalledWith(`/tmp/${avifencPng}`)
     expect(payload.logger.info).toHaveBeenCalledWith(expect.stringContaining('Cleaned up 2 avifenc'))
+    console.log('[boot-cleanup] ✓ both avifenc leftovers unlinked')
   })
 
   test('non-matching /tmp files are ignored', async () => {
     // These should not trigger any cleanup
+    console.log('[boot-cleanup] /tmp has 4 unrelated files → all ignored')
     vi.mocked(fs.readdir).mockResolvedValue([
       'somefile.txt',
       'next-server.js',
@@ -162,5 +175,6 @@ describe('runBootCleanup', () => {
     expect(payload.findByID).not.toHaveBeenCalled()
     expect(fs.unlink).not.toHaveBeenCalled()
     expect(deleteTempFile).not.toHaveBeenCalled()
+    console.log('[boot-cleanup] ✓ no cleanup triggered')
   })
 })

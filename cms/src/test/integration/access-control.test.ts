@@ -46,6 +46,7 @@ async function createApiKeyUser() {
 
 describe('Users collection', () => {
   test('unauthenticated cannot create a user', async () => {
+    console.log('[access] unauthenticated → create user → expect forbidden')
     await expect(
       payload.create({
         collection: 'users',
@@ -54,9 +55,11 @@ describe('Users collection', () => {
         draft: false,
       }),
     ).rejects.toThrow()
+    console.log('[access] ✓ rejected as expected')
   })
 
   test('admin can create a user', async () => {
+    console.log('[access] admin → create user → expect success')
     const admin = await createAdminUser()
     const user = await payload.create({
       collection: 'users',
@@ -66,9 +69,11 @@ describe('Users collection', () => {
       user: admin,
     })
     expect(user.id).toBeDefined()
+    console.log(`[access] ✓ created user ${user.id}`)
   })
 
   test('api-key role cannot create a user', async () => {
+    console.log('[access] api-key role → create user → expect forbidden')
     const apiUser = await createApiKeyUser()
     await expect(
       payload.create({
@@ -79,6 +84,7 @@ describe('Users collection', () => {
         user: apiUser,
       }),
     ).rejects.toThrow()
+    console.log('[access] ✓ rejected as expected')
   })
 })
 
@@ -86,15 +92,18 @@ describe('Users collection', () => {
 
 describe('Media collection', () => {
   test('unauthenticated cannot read media', async () => {
+    console.log('[access] unauthenticated → find media → expect forbidden')
     await expect(
       payload.find({
         collection: 'media',
         overrideAccess: false,
       }),
     ).rejects.toThrow()
+    console.log('[access] ✓ rejected as expected')
   })
 
   test('authenticated (api-key role) can read media', async () => {
+    console.log('[access] api-key role → find media → expect success')
     const apiUser = await createApiKeyUser()
     const result = await payload.find({
       collection: 'media',
@@ -102,10 +111,12 @@ describe('Media collection', () => {
       user: apiUser,
     })
     expect(result.docs).toBeDefined()
+    console.log(`[access] ✓ got ${result.docs.length} docs`)
   })
 
   test('api-key role cannot delete media', async () => {
     // Access control runs before the find — a forbidden error is thrown even with a fake ID
+    console.log('[access] api-key role → delete media → expect 403')
     const apiUser = await createApiKeyUser()
     await expect(
       payload.delete({
@@ -115,10 +126,12 @@ describe('Media collection', () => {
         user: apiUser,
       }),
     ).rejects.toMatchObject({ status: 403 })
+    console.log('[access] ✓ got 403 as expected')
   })
 
   test('admin passes delete access check on media', async () => {
     // Admin has delete access — error will be 404 (doc not found), not 403
+    console.log('[access] admin → delete non-existent media → expect 404 (not 403)')
     const admin = await createAdminUser()
     await expect(
       payload.delete({
@@ -128,5 +141,6 @@ describe('Media collection', () => {
         user: admin,
       }),
     ).rejects.toMatchObject({ status: 404 })
+    console.log('[access] ✓ got 404 (access check passed, doc not found)')
   })
 })
