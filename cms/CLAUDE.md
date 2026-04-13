@@ -9,6 +9,33 @@ pnpm build        # Production build
 docker compose up # Start PostgreSQL 18 locally
 ```
 
+## Testing
+
+Vitest + Testcontainers. Docker daemon must be running. No manual DB setup needed — a throwaway `postgres:18` container is spun up automatically per run.
+
+```bash
+pnpm test         # All tests (unit + integration + R2 pipeline)
+pnpm test:unit    # Boot cleanup logic only (fast, no DB)
+pnpm test:int     # Collection/access-control tests (needs Docker)
+pnpm test:media   # Full AVIF pipeline + real R2 upload (needs Docker + R2 creds)
+```
+
+### Test structure
+
+```
+src/test/
+  fixtures/          # Test assets (fragments-1.webp)
+  unit/              # Pure unit tests, fully mocked
+  integration/       # Real Payload + ephemeral Postgres
+    access-control.test.ts
+    media-processing.test.ts
+  global-setup.ts    # Starts/stops Postgres container, loads .env
+```
+
+### R2 isolation
+
+Tests upload to the `vitest/` prefix in R2 (`vitest/images/`, `vitest/videos/`), never touching `local/` or `prod/`. The prefix is purged before and after the media suite so crashed runs leave no orphans.
+
 ## Tech Stack
 
 - **CMS:** Payload CMS with LexicalEditor
