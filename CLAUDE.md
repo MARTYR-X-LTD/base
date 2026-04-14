@@ -26,6 +26,19 @@ Examples:
 [web/cms] Cache: add purge endpoint and afterChange hooks
 ```
 
+### Portable commits
+
+When a commit contains something reusable across projects, add `portable: yes` in the commit **body** — never in the header line:
+
+```
+[web] Cache: add stale-while-revalidate utility
+
+portable: yes
+Generic SWR helper with no project-specific config.
+```
+
+This flags the commit for later backporting to `MARTYR-X-LTD/base`. See `docs/base-porting.md` for the full porting workflow.
+
 ## Working from Root
 
 Always run Claude Code from the monorepo root (wherever `monk/` is cloned), even for frontend-only or CMS-only work. Git is at the root, and Claude loads all CLAUDE.md files correctly from here.
@@ -80,4 +93,5 @@ docs/
   superpowers/
     specs/        — design specs from brainstorming sessions
     plans/        — implementation plans
+  base-porting.md — how to backport features to MARTYR-X-LTD/base
 ```
