@@ -8,34 +8,39 @@ interface Props {
 
 const { node } = Astro.props
 
-const isBold = node.format & TEXT_FORMAT.BOLD
-const isItalic = node.format & TEXT_FORMAT.ITALIC
-const isUnderline = node.format & TEXT_FORMAT.UNDERLINE
-const isStrikethrough = node.format & TEXT_FORMAT.STRIKETHROUGH
-const isCode = node.format & TEXT_FORMAT.CODE
+const format = node.format ?? 0
+const text = node.text ?? ''
+
+// Check each format bit
+const isBold = (format & TEXT_FORMAT.BOLD) !== 0
+const isItalic = (format & TEXT_FORMAT.ITALIC) !== 0
+const isStrikethrough = (format & TEXT_FORMAT.STRIKETHROUGH) !== 0
+const isUnderline = (format & TEXT_FORMAT.UNDERLINE) !== 0
+const isCode = (format & TEXT_FORMAT.CODE) !== 0
+const isSubscript = (format & TEXT_FORMAT.SUBSCRIPT) !== 0
+const isSuperscript = (format & TEXT_FORMAT.SUPERSCRIPT) !== 0
+
+// Build HTML with nested tags for multiple formats
+function wrapText(content: string): string {
+  let result = content
+
+  // Code is mutually exclusive with other inline formats
+  if (isCode) {
+    return `<code>${result}</code>`
+  }
+
+  // Apply formats from innermost to outermost
+  if (isSuperscript) result = `<sup>${result}</sup>`
+  if (isSubscript) result = `<sub>${result}</sub>`
+  if (isStrikethrough) result = `<s>${result}</s>`
+  if (isUnderline) result = `<u>${result}</u>`
+  if (isItalic) result = `<em>${result}</em>`
+  if (isBold) result = `<strong>${result}</strong>`
+
+  return result
+}
+
+const html = wrapText(text)
 ---
 
-{#if isCode}
-  <code class="lexical-code">{node.text}</code>
-{:else}
-  <span
-    class:isBold
-    class:isItalic
-    class:isUnderline
-    class:isStrikethrough
-  >{node.text}</span>
-{/if}
-
-<style lang="scss">
-  .isBold { font-weight: 700; }
-  .isItalic { font-style: italic; }
-  .isUnderline { text-decoration: underline; }
-  .isStrikethrough { text-decoration: line-through; }
-  .lexical-code {
-    font-family: 'Fira Code', monospace;
-    background: var(--surface-raised);
-    padding: 0.125rem 0.375rem;
-    border-radius: 0.25rem;
-    font-size: 0.875em;
-  }
-</style>
+<Fragment set:html={html} />

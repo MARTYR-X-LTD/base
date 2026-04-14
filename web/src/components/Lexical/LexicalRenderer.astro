@@ -7,6 +7,7 @@ import LexicalList from './nodes/LexicalList.astro'
 import LexicalLink from './nodes/LexicalLink.astro'
 import LexicalQuote from './nodes/LexicalQuote.astro'
 import LexicalHorizontalRule from './nodes/LexicalHorizontalRule.astro'
+import LexicalMedia from './nodes/LexicalMedia.astro'
 
 interface Props {
   nodes: LexicalNode[]
@@ -24,6 +25,7 @@ function getNodeComponent(node: LexicalNode) {
     link: LexicalLink,
     quote: LexicalQuote,
     horizontalrule: LexicalHorizontalRule,
+    upload: LexicalMedia,
     linebreak: 'br',
   }
 
@@ -37,13 +39,16 @@ function getNodeComponent(node: LexicalNode) {
       const Component = getNodeComponent(node)
 
       if (!Component) {
+        console.warn(`Unknown Lexical node type: ${node.type}`)
         return null
       }
 
+      // Native HTML elements render directly
       if (typeof Component === 'string') {
         return <Component />
       }
 
+      // Astro components receive node data
       return <Component node={node} />
     })
 }
