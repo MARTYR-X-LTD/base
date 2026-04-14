@@ -33,3 +33,6 @@ web/.astro/
 
 # Database backups (local)
 cms/db-backups/
+
+# Wrangler
+web/.wrangler/
