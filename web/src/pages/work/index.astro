@@ -7,7 +7,7 @@ export const prerender = false
 const { entries: works, cacheHint } = await getLiveCollection('works')
 
 if (cacheHint) Astro.cache.set(cacheHint)
-Astro.cache.set({ maxAge: 600, swr: 60, tags: ['works'] })
+Astro.cache.set({ maxAge: 31536000, swr: 3600, tags: ['works'] })
 ---
 
 <Base title="Work — mönk" description="Selected work from mönk creative studio">
