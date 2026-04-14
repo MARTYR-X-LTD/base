@@ -5,7 +5,9 @@
   "type": "module",
   "packageManager": "pnpm@10.30.3",
   "scripts": {
-    "dev": "pnpm payload generate:importmap && cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "db": "docker-compose up",
+    "dev": "zellij --layout zellij-layout.kdl",
+    "dev:next": "pnpm payload generate:importmap && cross-env NODE_OPTIONS=--no-deprecation next dev --port ${CMS_PORT:-3000}",
     "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "serve": "payload serve",
@@ -15,39 +17,44 @@
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run src/test/unit",
+    "test:int": "vitest run src/test/integration",
+    "test:media": "vitest run src/test/integration/media-processing.test.ts",
     "typecheck": "tsc --noEmit",
     "db:clone-prod": "./scripts/clone-prod-db.sh",
     "approve-builds": "pnpm approve-builds"
   },
   "dependencies": {
-    "payload": "3.82.1",
+    "@aws-sdk/client-s3": "^3.1001.0",
+    "@aws-sdk/lib-storage": "^3.1001.0",
     "@payloadcms/db-postgres": "3.82.1",
     "@payloadcms/next": "3.82.1",
     "@payloadcms/richtext-lexical": "3.82.1",
     "@payloadcms/ui": "3.82.1",
-    "@aws-sdk/client-s3": "^3.1001.0",
-    "@aws-sdk/lib-storage": "^3.1001.0",
     "cross-env": "^10.1.0",
+    "nanoid": "5.1.7",
     "next": "^16.1.6",
     "node-av": "^5.2.2",
+    "payload": "3.82.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "sharp": "0.34.5",
-    "nanoid": "5.1.7"
+    "sharp": "0.34.5"
   },
   "devDependencies": {
+    "@testcontainers/postgresql": "^11.14.0",
     "@types/node": "^25.3.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "typescript": "^5.9.3"
+    "dotenv": "^17.4.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.4"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "sharp",
       "node-av",
       "@seydx/node-av-darwin-arm64",
-      "@seydx/node-av-darwin-x64",
-      "@seydx/node-av-linux-arm64",
       "@seydx/node-av-linux-x64"
     ]
   }

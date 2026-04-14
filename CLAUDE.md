@@ -28,7 +28,7 @@ Examples:
 
 ## Working from Root
 
-Always run Claude Code from the monorepo root (`/Users/arecsu/o3/monk`), even for frontend-only or CMS-only work. Git is at the root, and Claude loads all CLAUDE.md files correctly from here.
+Always run Claude Code from the monorepo root (wherever `monk/` is cloned), even for frontend-only or CMS-only work. Git is at the root, and Claude loads all CLAUDE.md files correctly from here.
 
 Subproject CLAUDE.md files are authoritative for their domain — read them before working in those areas:
 - `web/CLAUDE.md` — frontend patterns, tech stack, key gotchas
@@ -39,6 +39,10 @@ Subproject CLAUDE.md files are authoritative for their domain — read them befo
 - `web/` — Astro 6.1 frontend, SSR on Cloudflare Workers. See `web/CLAUDE.md`.
 - `cms/` — Payload CMS, Docker deployed to Coolify VPS. See `cms/CLAUDE.md`.
 - `docs/` — All project documentation (see Docs section below).
+
+## Environment
+
+Development happens on both macOS and Linux. Be mindful of platform differences: path separators, shell behavior, binary availability, and filesystem case-sensitivity. Never hardcode platform-specific paths or assume a specific OS.
 
 ## Tooling
 
@@ -58,6 +62,9 @@ Never read `.env` files. Only `.env.example` files are safe to read if needed.
 
 ### Node version
 Managed via `.node-version` files and `fnm`. Do not change Node versions manually.
+
+### File paths
+Always use absolute paths when reading or searching files. Derive the repo root from the current working directory — never hardcode a platform-specific path. Never assume a file doesn't exist based on a failed relative-path lookup — retry with the absolute path first.
 
 ## Docs
 

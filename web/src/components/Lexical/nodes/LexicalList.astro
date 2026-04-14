@@ -8,26 +8,21 @@ interface Props {
 }
 
 const { node } = Astro.props
+
+// Determine if this is a list container or list item
+const isListContainer = 'tag' in node || 'listType' in node
+const Tag =
+  'tag' in node
+    ? node.tag
+    : 'listType' in node && node.listType === 'number'
+      ? 'ol'
+      : 'ul'
 ---
 
-{#if node.type === 'list'}
-  {#if node.tag === 'ul'}
-    <ul>
-      {#if 'children' in node}
-        <LexicalRenderer nodes={node.children as LexicalNode[]} />
-      {/if}
-    </ul>
-  {:else}
-    <ol>
-      {#if 'children' in node}
-        <LexicalRenderer nodes={node.children as LexicalNode[]} />
-      {/if}
-    </ol>
-  {/if}
-{:else if node.type === 'listitem'}
-  <li>
-    {#if 'children' in node}
-      <LexicalRenderer nodes={node.children as LexicalNode[]} />
-    {/if}
-  </li>
-{/if}
+{
+  isListContainer ? (
+    <Tag><LexicalRenderer nodes={node.children as LexicalNode[]} /></Tag>
+  ) : (
+    <li><LexicalRenderer nodes={node.children as LexicalNode[]} /></li>
+  )
+}

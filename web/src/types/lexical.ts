@@ -8,7 +8,32 @@ import type {
   SerializedLineBreakNode,
   SerializedQuoteNode,
   SerializedHorizontalRuleNode,
+  SerializedUploadNode,
 } from '@payloadcms/richtext-lexical'
+import type { Media } from '@cms/payload-types'
+
+/**
+ * Custom fields added to upload nodes in rich text
+ */
+export interface MediaUploadFields {
+  caption?: string
+  maxWidth?: string
+  figureMargin?: string
+  imgPadding?: string
+  customFigureStyle?: string
+  customImgStyle?: string
+}
+
+/**
+ * Upload node with custom fields
+ * Fields are in node.fields, media is in node.value
+ */
+export interface MediaUploadNode extends Omit<SerializedUploadNode, 'value' | 'fields'> {
+  type: 'upload'
+  relationTo: 'media'
+  value: Media | string // Populated Media or just ID string
+  fields: MediaUploadFields | null
+}
 
 export interface LinkFields {
   url: string
@@ -26,6 +51,7 @@ export type LexicalNode =
   | SerializedHeadingNode
   | SerializedListNode
   | SerializedListItemNode
+  | MediaUploadNode
   | SerializedLinkNode
   | SerializedLineBreakNode
   | SerializedQuoteNode

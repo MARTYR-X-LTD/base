@@ -1,0 +1,144 @@
+---
+import type { MediaUploadNode } from '@types/lexical'
+
+interface Props {
+  node: MediaUploadNode
+}
+
+const { node } = Astro.props
+
+// Skip if not populated
+if (typeof node.value === 'string') {
+  console.warn('LexicalMedia: media relationship not populated')
+}
+
+const media = typeof node.value !== 'string' ? node.value : null
+const isSVG = media?.mediaType === 'svg'
+const isVideo = media?.mediaType === 'video'
+
+// Extract custom fields from node.fields (NOT from media object)
+// These are upload-specific overrides set in the Lexical editor
+const fields = node.fields
+const caption = fields?.caption
+const maxWidth = fields?.maxWidth
+const figureMargin = fields?.figureMargin
+const imgPadding = fields?.imgPadding
+const customFigureStyle = fields?.customFigureStyle
+const customImgStyle = fields?.customImgStyle
+
+/**
+ * Smart CSS merging - combines specific fields with custom CSS
+ * Custom CSS takes precedence if there are conflicts
+ */
+function mergeStyles(
+  specificRules: Array<{ property: string; value: string }>,
+  customCss?: string
+): string {
+  const cssMap = new Map<string, string>()
+
+  specificRules.forEach(({ property, value }) => {
+    if (value) cssMap.set(property, value)
+  })
+
+  if (customCss) {
+    customCss.split(';').forEach((rule) => {
+      const trimmed = rule.trim()
+      if (!trimmed) { return }
+
+      const colonIndex = trimmed.indexOf(':')
+      if (colonIndex === -1) { return }
+
+      const property = trimmed.substring(0, colonIndex).trim()
+      const value = trimmed.substring(colonIndex + 1).trim()
+
+      if (property && value) {
+        cssMap.set(property, value)
+      }
+    })
+  }
+
+  return Array.from(cssMap.entries())
+    .map(([prop, value]) => `${prop}: ${value}`)
+    .join('; ')
+}
+
+const figureStyle = mergeStyles(
+  [
+    { property: 'max-width', value: maxWidth || '' },
+    { property: 'margin', value: figureMargin || '' },
+  ],
+  customFigureStyle
+)
+
+const imgStyle = mergeStyles([{ property: 'padding', value: imgPadding || '' }], customImgStyle)
+
+// Build srcset from AVIF variants
+const srcset = media?.variants?.map((v) => `${v.url} ${v.width}w`).join(', ') || ''
+const src = media?.variants?.[0]?.url ?? media?.url ?? ''
+---
+
+{
+  media && isSVG && (
+    <figure style={figureStyle || undefined}>
+      <Fragment set:html={media.svgContent} />
+      {caption && <figcaption>{caption}</figcaption>}
+    </figure>
+  )
+}
+{
+  media && !isSVG && !isVideo && (
+    <figure style={figureStyle || undefined}>
+      <img
+        src={src}
+        srcset={srcset || undefined}
+        sizes={srcset ? 'auto' : undefined}
+        alt={media.alt || ''}
+        width={media.width ?? undefined}
+        height={media.height ?? undefined}
+        loading="lazy"
+        style={imgStyle || undefined}
+      />
+      {caption && <figcaption>{caption}</figcaption>}
+    </figure>
+  )
+}
+{
+  media && isVideo && (
+    <figure style={figureStyle || undefined}>
+      <video
+        width={media.width ?? undefined}
+        height={media.height ?? undefined}
+        autoplay={media.videoMetadata?.autoplay ?? true}
+        muted={media.videoMetadata?.muted ?? true}
+        loop={media.videoMetadata?.loop ?? true}
+        controls={media.videoMetadata?.controls ?? true}
+        playsinline={media.videoMetadata?.playsinline ?? true}
+        style={imgStyle || undefined}
+      >
+        <source src={media.url ?? ''} type={media.mimeType || 'video/mp4'} />
+      </video>
+      {caption && <figcaption>{caption}</figcaption>}
+    </figure>
+  )
+}
+
+<style>
+  figure {
+    margin-block: 2rem;
+    margin-inline: auto;
+  }
+
+  img,
+  video {
+    width: 100%;
+    height: auto;
+    margin-inline: auto;
+  }
+
+  figcaption {
+    margin-top: 0.9rem;
+    font-size: 0.95em;
+    color: var(--text-muted);
+    text-align: center;
+  }
+</style>

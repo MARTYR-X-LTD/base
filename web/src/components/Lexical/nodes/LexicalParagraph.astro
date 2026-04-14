@@ -1,12 +1,13 @@
 ---
+import type { SerializedParagraphNode } from '@payloadcms/richtext-lexical'
 import type { LexicalNode } from '@types/lexical'
 import LexicalRenderer from '@components/Lexical/LexicalRenderer.astro'
 
 interface Props {
-  node: { children: LexicalNode[] }
+  node: SerializedParagraphNode
 }
 
 const { node } = Astro.props
 ---
 
-<p><LexicalRenderer nodes={node.children} /></p>
+<p><LexicalRenderer nodes={node.children as LexicalNode[]} /></p>

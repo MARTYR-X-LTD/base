@@ -174,8 +174,26 @@ export interface Media {
      */
     duration?: number | null;
     fps?: number | null;
-    width?: number | null;
-    height?: number | null;
+    /**
+     * Start playing automatically
+     */
+    autoplay?: boolean | null;
+    /**
+     * Mute audio (required for autoplay)
+     */
+    muted?: boolean | null;
+    /**
+     * Loop playback infinitely
+     */
+    loop?: boolean | null;
+    /**
+     * Show playback controls
+     */
+    controls?: boolean | null;
+    /**
+     * Play inline on iOS (no fullscreen)
+     */
+    playsinline?: boolean | null;
   };
   /**
    * Auto-generated AVIF variants
@@ -183,24 +201,21 @@ export interface Media {
   variants?:
     | {
         url: string;
-        width?: number | null;
-        height?: number | null;
+        width: number;
+        height: number;
         fileSize?: number | null;
         id?: string | null;
       }[]
     | null;
+  processingMetadata?: {
+    variants?: string | null;
+    processedAt?: string | null;
+  };
+  /**
+   * SVG markup for inline HTML use (XML declaration stripped)
+   */
   svgContent?: string | null;
   r2Url?: string | null;
-  processingMetadata?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  customUrl?: string | null;
   avifQuality?: {
     usePerVariantQuality?: boolean | null;
     colorQuality?: number | null;
@@ -234,14 +249,36 @@ export interface Work {
   slug: string;
   category?: (number | null) | Category;
   featuredImage?: (string | null) | Media;
-  gallery?:
-    | {
-        media: string | Media;
-        id?: string | null;
-        blockName?: string | null;
-        blockType: 'single-media';
-      }[]
-    | null;
+  /**
+   * Product page media gallery
+   */
+  mediaGallery?: {
+    /**
+     * Drag to reorder.
+     */
+    items?:
+      | {
+          media: string | Media;
+          width?: ('full' | 'half' | 'quarter' | 'third') | null;
+          display?: ('all' | 'desktop' | 'mobile') | null;
+          /**
+           * CSS padding on container element
+           */
+          padding?: string | null;
+          /**
+           * Extra CSS classes on container
+           */
+          customClasses?: string | null;
+          /**
+           * Inline CSS on inner wrapper
+           */
+          customStyle?: string | null;
+          id?: string | null;
+          blockName?: string | null;
+          blockType: 'singleMedia';
+        }[]
+      | null;
+  };
   infoPanel?:
     | (
         | {
@@ -319,14 +356,36 @@ export interface StoreProduct {
   title: string;
   slug: string;
   featuredImage?: (string | null) | Media;
-  gallery?:
-    | {
-        media: string | Media;
-        id?: string | null;
-        blockName?: string | null;
-        blockType: 'single-media';
-      }[]
-    | null;
+  /**
+   * Product page media gallery
+   */
+  mediaGallery?: {
+    /**
+     * Drag to reorder.
+     */
+    items?:
+      | {
+          media: string | Media;
+          width?: ('full' | 'half' | 'quarter' | 'third') | null;
+          display?: ('all' | 'desktop' | 'mobile') | null;
+          /**
+           * CSS padding on container element
+           */
+          padding?: string | null;
+          /**
+           * Extra CSS classes on container
+           */
+          customClasses?: string | null;
+          /**
+           * Inline CSS on inner wrapper
+           */
+          customStyle?: string | null;
+          id?: string | null;
+          blockName?: string | null;
+          blockType: 'singleMedia';
+        }[]
+      | null;
+  };
   infoPanel?:
     | (
         | {
@@ -523,8 +582,11 @@ export interface MediaSelect<T extends boolean = true> {
     | {
         duration?: T;
         fps?: T;
-        width?: T;
-        height?: T;
+        autoplay?: T;
+        muted?: T;
+        loop?: T;
+        controls?: T;
+        playsinline?: T;
       };
   variants?:
     | T
@@ -535,10 +597,14 @@ export interface MediaSelect<T extends boolean = true> {
         fileSize?: T;
         id?: T;
       };
+  processingMetadata?:
+    | T
+    | {
+        variants?: T;
+        processedAt?: T;
+      };
   svgContent?: T;
   r2Url?: T;
-  processingMetadata?: T;
-  customUrl?: T;
   avifQuality?:
     | T
     | {
@@ -573,15 +639,24 @@ export interface WorksSelect<T extends boolean = true> {
   slug?: T;
   category?: T;
   featuredImage?: T;
-  gallery?:
+  mediaGallery?:
     | T
     | {
-        'single-media'?:
+        items?:
           | T
           | {
-              media?: T;
-              id?: T;
-              blockName?: T;
+              singleMedia?:
+                | T
+                | {
+                    media?: T;
+                    width?: T;
+                    display?: T;
+                    padding?: T;
+                    customClasses?: T;
+                    customStyle?: T;
+                    id?: T;
+                    blockName?: T;
+                  };
             };
       };
   infoPanel?:
@@ -623,15 +698,24 @@ export interface StoreProductsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   featuredImage?: T;
-  gallery?:
+  mediaGallery?:
     | T
     | {
-        'single-media'?:
+        items?:
           | T
           | {
-              media?: T;
-              id?: T;
-              blockName?: T;
+              singleMedia?:
+                | T
+                | {
+                    media?: T;
+                    width?: T;
+                    display?: T;
+                    padding?: T;
+                    customClasses?: T;
+                    customStyle?: T;
+                    id?: T;
+                    blockName?: T;
+                  };
             };
       };
   infoPanel?:

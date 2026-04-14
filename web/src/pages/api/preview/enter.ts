@@ -1,28 +1,29 @@
 import type { APIRoute } from 'astro'
+import { verifyPreviewToken } from '@/utils/preview-token'
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
-  const secret = url.searchParams.get('secret')
-  const slug = url.searchParams.get('slug')
-  const collection = url.searchParams.get('collection')
+  const token = url.searchParams.get('token')
 
-  if (secret !== import.meta.env.PREVIEW_SECRET) {
-    return new Response('Invalid preview secret', { status: 401 })
+  if (!token) {
+    return new Response('Missing preview token', { status: 400 })
   }
 
-  if (!slug || !collection) {
-    return new Response('Missing slug or collection', { status: 400 })
+  const payload = await verifyPreviewToken(token, import.meta.env.PREVIEW_SECRET)
+
+  if (!payload) {
+    return new Response('Invalid or expired preview token', { status: 401 })
   }
 
-  // Set draft cookie
+  const { slug, collection } = payload
+
   cookies.set('draft', 'true', {
     path: '/',
     httpOnly: true,
     secure: true,
     sameSite: 'lax',
-    maxAge: 60 * 60, // 1 hour
+    maxAge: 60 * 60 * 24, // 24 hours — matches token expiry
   })
 
-  // Redirect to the content page
   const redirectMap: Record<string, string> = {
     works: `/work/${slug}`,
     'store-products': `/store/${slug}`,

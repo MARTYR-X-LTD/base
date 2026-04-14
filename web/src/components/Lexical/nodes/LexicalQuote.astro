@@ -10,15 +10,4 @@ interface Props {
 const { node } = Astro.props
 ---
 
-<blockquote>
-  <LexicalRenderer nodes={node.children as LexicalNode[]} />
-</blockquote>
-
-<style lang="scss">
-  blockquote {
-    border-left: 3px solid var(--accent);
-    padding-left: 1rem;
-    margin: 1rem 0;
-    color: var(--text-muted);
-  }
-</style>
+<blockquote><LexicalRenderer nodes={node.children as LexicalNode[]} /></blockquote>

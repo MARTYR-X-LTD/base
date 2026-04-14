@@ -9,7 +9,12 @@ type StorageType = 'images' | 'videos' | 'svg'
  * local/images, local/videos, local/svg otherwise.
  */
 export function getR2Config(type: StorageType): R2StorageConfig {
-  const env = process.env.PAYLOAD_ENV === 'production' ? 'prod' : 'local'
+  const env =
+    process.env.PAYLOAD_ENV === 'production'
+      ? 'prod'
+      : process.env.PAYLOAD_ENV === 'test'
+        ? 'vitest'
+        : 'local'
   return {
     bucket: process.env.R2_BUCKET!,
     prefix: `${env}/${type}`,

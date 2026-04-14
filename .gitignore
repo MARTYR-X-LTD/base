@@ -10,6 +10,7 @@ cms/build/
 .env
 .env.local
 .env.*.local
+web/.env.prod-cms
 
 # IDE
 .vscode/
@@ -32,3 +33,6 @@ web/.astro/
 
 # Database backups (local)
 cms/db-backups/
+
+# Wrangler
+web/.wrangler/
