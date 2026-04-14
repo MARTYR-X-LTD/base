@@ -47,6 +47,10 @@ Imported directly from CMS via TS path alias:
 import type { Work } from '@cms/payload-types'
 ```
 
+### Draft Preview
+
+`/api/preview/enter` validates a signed JWT (`?token=<jwt>`), sets a `draft=true` cookie, and redirects to the content page. The JWT is signed by the CMS using `PREVIEW_SECRET` (HMAC-SHA256, 24h expiry). Token verification lives in `src/utils/preview-token.ts`. See `docs/web/preview.md` for the full picture.
+
 ### TypeScript Path Aliases
 
 Defined in `tsconfig.json`:

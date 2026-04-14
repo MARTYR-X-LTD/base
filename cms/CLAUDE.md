@@ -77,6 +77,10 @@ PayloadCMS overwrites R2 URLs with local paths. Use `customUrl` field + `afterRe
 - `api-key` — read-only (used by frontend)
 - Always use `isAdmin` / `isAuthenticated` helpers from `src/lib/access-control.ts`
 
+## Draft Preview
+
+The `admin.preview` function on `Works` and `StoreProducts` signs a JWT using `PREVIEW_SECRET` (HMAC-SHA256, 24h expiry) and returns a URL pointing to the frontend's `/api/preview/enter`. Token signing lives in `src/lib/preview-token.ts`. Requires `FRONTEND_URL` in `.env`. See `docs/web/preview.md`.
+
 ## Docs
 
 - **Updating dependencies:** see `docs/updating/cms.md`
