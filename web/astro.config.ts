@@ -2,13 +2,17 @@ import { defineConfig } from 'astro/config'
 import cloudflare from '@astrojs/cloudflare'
 import svelte from '@astrojs/svelte'
 import Icons from 'unplugin-icons/vite'
-import path from 'path'
 import { fileURLToPath } from 'url'
+import sitemap from "@astrojs/sitemap"
+
 
 export default defineConfig({
   output: 'server',
   adapter: cloudflare(),
-  integrations: [svelte()],
+  integrations: [
+    svelte(),
+    ...(process.env.PUBLIC_SITE_URL === "https://example.com" ? [sitemap()] : []),
+  ],
   experimental: {
     cache: {
       provider: {
@@ -17,23 +21,20 @@ export default defineConfig({
     },
   },
   vite: {
-    resolve: {
-      alias: {
-        '@styles': path.resolve('./src/styles'),
-      },
-    },
     plugins: [
       Icons({
         compiler: 'svelte',
         autoInstall: true,
       }),
     ],
+    esbuild: {
+      drop: ['console', 'debugger'],
+    },
     css: {
       preprocessorOptions: {
         scss: {
-          api: 'modern-compiler',
-          loadPaths: [path.resolve('./src/styles')],
           additionalData: `@use "mixins" as *; @use "vars" as *;`,
+          loadPaths: [fileURLToPath(new URL('./src/styles', import.meta.url))],
         },
       },
     },
