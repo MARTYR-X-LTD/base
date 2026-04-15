@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Icon from '@components/Icon.svelte'
+	import Icon from '@/components/Icon.svelte'
 	import IconArrowRight from '~icons/ph/caret-circle-right-fill'
 	import IconArrowLeft from '~icons/ph/caret-circle-left-fill'
 
