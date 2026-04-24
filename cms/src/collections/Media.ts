@@ -6,6 +6,7 @@ import type { Media as MediaType } from '@/payload-types'
 
 export const Media: CollectionConfig = {
   slug: 'media',
+  folders: true,
 
   // Controls which fields are included when Media is populated as a relationship
   // (e.g., when fetching Works/StoreProducts with depth >= 1).
@@ -17,9 +18,9 @@ export const Media: CollectionConfig = {
   // Fields listed as `false` are excluded from relationship populations only.
   // Using exclude mode so new fields are automatically included without updating this.
   defaultPopulate: {
-    processingMetadata: false,
     avifQuality: false,
     r2Url: false,
+    folder: false,
   },
 
   upload: {
@@ -83,9 +84,11 @@ export const Media: CollectionConfig = {
       admin: { readOnly: true },
     },
     {
-      // Overrides Payload's auto-generated ID so we control the value used in R2 filenames
-      name: 'id',
+      // Nanoid key used as prefix for R2 filenames. Separate from the numeric Payload ID.
+      name: 'storageKey',
       type: 'text',
+      unique: true,
+      index: true,
       hooks: {
         beforeValidate: [({ value }) => value || nanoid()],
       },
@@ -107,17 +110,6 @@ export const Media: CollectionConfig = {
       name: 'thumbnailURL',
       type: 'text',
       admin: { readOnly: true, hidden: true },
-    },
-    {
-      name: 'mediaType',
-      type: 'select',
-      options: [
-        { label: 'Image', value: 'image' },
-        { label: 'SVG', value: 'svg' },
-        { label: 'Video', value: 'video' },
-        { label: '3D', value: '3d' },
-      ],
-      admin: { readOnly: true, position: 'sidebar' },
     },
     {
       name: 'videoMetadata',
@@ -189,51 +181,22 @@ export const Media: CollectionConfig = {
         {
           type: 'row',
           fields: [
-            { name: 'width', type: 'number', required: true, admin: { readOnly: true, width: '33%' } },
-            { name: 'height', type: 'number', required: true, admin: { readOnly: true, width: '33%' } },
+            { name: 'width', type: 'number', required: true, admin: { readOnly: true, width: '25%' } },
+            { name: 'height', type: 'number', required: true, admin: { readOnly: true, width: '25%' } },
             {
               name: 'fileSize',
               type: 'number',
               admin: {
                 readOnly: true,
-                width: '34%',
+                width: '25%',
                 components: {
                   Field: '@/components/FileSizeNumberField#FileSizeNumberField',
                   Cell: '@/components/FileSizeCell#FileSizeCell',
                 },
               },
             },
-          ],
-        },
-      ],
-    },
-    {
-      // Processing info (timing, sizes, quality). Never exposed in API.
-      name: 'processingMetadata',
-      type: 'group',
-      label: 'Processing Info',
-      admin: {
-        readOnly: true,
-        condition: (data) =>
-          Boolean(data.id) &&
-          data.mimeType !== 'image/svg+xml' &&
-          !data.mimeType?.startsWith('video/'),
-      },
-      fields: [
-        {
-          type: 'row',
-          fields: [
-            { name: 'variants', type: 'text', label: 'Variants', admin: { readOnly: true, width: '70%' } },
-            {
-              name: 'processedAt',
-              type: 'date',
-              label: 'Processed',
-              admin: {
-                readOnly: true,
-                width: '30%',
-                date: { displayFormat: 'MMM d, yyyy h:mm a' },
-              },
-            },
+            { name: 'colorQuality', type: 'number', admin: { readOnly: true, width: '12%' } },
+            { name: 'alphaQuality', type: 'number', admin: { readOnly: true, width: '13%' } },
           ],
         },
       ],
@@ -259,12 +222,49 @@ export const Media: CollectionConfig = {
     },
     // Note: r2Url is used internally by SVG and video processors to restore URLs
     // after PayloadCMS reconstruction, but deleted in afterRead hooks before API response.
-    // Note: avifQuality field (advanced AVIF encoding settings) is dynamically injected
-    // by the mediaProcessor plugin based on configured sizes.
+    // Note: avifQuality field (upload-time quality controls) is dynamically injected
+    // by the mediaProcessor plugin and stripped from API responses after upload.
     // See src/plugins/media-processor/index.ts for dynamic field generation.
   ],
 
   hooks: {
+    afterChange: [
+      async ({ doc, req, operation }) => {
+        if (operation !== 'create' || doc.folder) return doc
+
+        const mimeType = doc.mimeType as string | undefined
+        let folderName: string
+        if (mimeType === 'image/svg+xml') folderName = 'SVG'
+        else if (mimeType?.startsWith('video/')) folderName = 'Videos'
+        else if (mimeType?.startsWith('model/')) folderName = '3D'
+        else folderName = 'Images'
+
+        const { payload } = req
+        const existing = await payload.find({
+          collection: 'payload-folders',
+          where: { name: { equals: folderName } },
+          limit: 1,
+          req,
+        })
+
+        const folder =
+          existing.docs[0] ??
+          (await payload.create({
+            collection: 'payload-folders',
+            data: { name: folderName, folderType: ['media'] },
+            req,
+          }))
+
+        await payload.update({
+          collection: 'media',
+          id: doc.id,
+          data: { folder: folder.id },
+          req,
+        })
+
+        return doc
+      },
+    ],
     beforeDelete: [
       async ({ req, id }) => {
         const { payload } = req

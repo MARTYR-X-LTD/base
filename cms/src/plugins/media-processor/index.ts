@@ -9,7 +9,6 @@ import {
 } from './processor'
 import { deleteTempFile, deleteMultipleFromR2, getR2KeysFromVariants } from './cleanup'
 import { uploadToR2 } from './uploader'
-import { nanoid } from 'nanoid'
 import sharp from 'sharp'
 import fs from 'fs/promises'
 import path from 'path'
@@ -20,7 +19,7 @@ import { Demuxer, Decoder, Encoder, FF_ENCODER_MJPEG } from 'node-av'
  * Create media processor fields that will be injected into Media collection
  *
  * Only includes dynamically-generated fields (avifQuality with per-variant controls).
- * Static fields (variants, processingMetadata, svgContent, r2Url) are defined
+ * Static fields (variants, svgContent, r2Url) are defined
  * directly in Media.ts for consistency with videoMetadata.
  */
 function createMediaProcessorFields(opts: MediaProcessorOptions): Field[] {
@@ -243,7 +242,6 @@ export const mediaProcessor = (opts: MediaProcessorOptions) => {
 
                 // Clean up irrelevant fields from API response
                 delete doc.variants
-                delete doc.processingMetadata
                 delete doc.avifQuality
                 delete doc.svgContent
                 delete doc.r2Url
@@ -265,8 +263,10 @@ export const mediaProcessor = (opts: MediaProcessorOptions) => {
                   }
                 }
 
-                // Clean up irrelevant fields from API response
+                // Clean up internal fields from API response
                 delete doc.videoMetadata
+                delete doc.avifQuality
+                delete doc.thumbnailURL
                 delete doc.svgContent
                 delete doc.r2Url
 
@@ -289,8 +289,8 @@ export const mediaProcessor = (opts: MediaProcessorOptions) => {
 
               // Handle video uploads (no processing, just metadata extraction + R2 upload + thumbnail generation)
               if (req.file.mimetype.startsWith('video/')) {
-                const docId = nanoid()
-                console.log(`[VIDEO] Processing ${req.file.name} (ID: ${docId})`)
+                const docId = data.storageKey
+                console.log(`[VIDEO] Processing ${req.file.name} (storageKey: ${docId})`)
 
                 const uploadedKeys: string[] = [] // Track uploaded files for cleanup on error
 
@@ -439,7 +439,6 @@ export const mediaProcessor = (opts: MediaProcessorOptions) => {
                   // Return document data with video metadata (same pattern as SVG)
                   return {
                     ...data,
-                    id: docId,
                     filename: req.file.name,
                     mimeType: req.file.mimetype,
                     filesize: req.file.data.length,
@@ -478,8 +477,7 @@ export const mediaProcessor = (opts: MediaProcessorOptions) => {
                 }
               }
 
-              // Generate unique ID first (needed for filenames)
-              const docId = nanoid() // 21 chars (default): collision resistance
+              const docId = data.storageKey
 
               const ext = path.extname(req.file.name)
               const tempFilePath = `/tmp/${docId}-original${ext}`
@@ -615,11 +613,14 @@ export const mediaProcessor = (opts: MediaProcessorOptions) => {
 
                   console.log(`[AVIF] Uploaded ${variant.width}w to R2`)
 
+                  const q = variantQualityMap[variant.width!]
                   uploadedVariants.push({
                     url,
                     width: variant.width,
                     height: variant.height,
                     fileSize: variant.fileSize,
+                    colorQuality: q?.color ?? opts.avifSettings.colorQuality,
+                    alphaQuality: q?.alpha ?? opts.avifSettings.alphaQuality,
                   })
                 }
 
@@ -654,7 +655,7 @@ export const mediaProcessor = (opts: MediaProcessorOptions) => {
 
                 return {
                   ...data,
-                  id: docId,
+                  avifQuality: undefined,
                   filename: req.file.name,
                   mimeType: 'image/avif', // Update to AVIF since we converted it
                   filesize: largestVariant.fileSize, // Show size of largest variant (most representative)
@@ -662,15 +663,6 @@ export const mediaProcessor = (opts: MediaProcessorOptions) => {
                   height,
                   url: largestVariant.url, // Point directly to R2
                   variants: uploadedVariants,
-                  processingMetadata: {
-                    variants: uploadedVariants
-                      .map((v) => {
-                        const q = variantQualityMap[v.width || 0]
-                        return `${v.width}w (q:${q?.color ?? '?'}/${q?.alpha ?? '?'})`
-                      })
-                      .join(', '),
-                    processedAt: new Date().toISOString(),
-                  },
                 }
               } catch (err) {
                 console.error(`[AVIF] Failed to process image ${req.file.name}:`, err)

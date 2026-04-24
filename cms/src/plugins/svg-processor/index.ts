@@ -5,7 +5,6 @@ import { sanitizeSvg } from './sanitizer'
 import { uploadSvgToR2 } from './uploader'
 import { getR2KeyFromUrl } from './cleanup'
 import { deleteFromR2 } from '@/plugins/media-processor/cleanup'
-import { nanoid } from 'nanoid'
 
 /**
  * SVG Processor Plugin
@@ -44,7 +43,6 @@ export const svgProcessor = (opts: SvgProcessorOptions) => {
 
               // Clean up internal/non-SVG fields from API response
               delete doc.variants
-              delete doc.processingMetadata
               delete doc.avifQuality
               delete doc.thumbnailURL
               delete doc.r2Url // Internal field, no longer needed after URL restoration
@@ -65,8 +63,7 @@ export const svgProcessor = (opts: SvgProcessorOptions) => {
 
               console.log(`[SVG] Starting processing for ${req.file.name}`)
 
-              // Generate unique ID (same as AVIF processor)
-              const docId = nanoid() // 21 chars: collision resistance
+              const docId = data.storageKey
 
               try {
                 // STEP 1: Validate SVG
@@ -100,7 +97,6 @@ export const svgProcessor = (opts: SvgProcessorOptions) => {
 
                 return {
                   ...data,
-                  id: docId,
                   filename: req.file.name,
                   mimeType: 'image/svg+xml',
                   filesize: req.file.data.length,

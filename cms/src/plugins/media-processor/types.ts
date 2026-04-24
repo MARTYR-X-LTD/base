@@ -55,4 +55,6 @@ export interface ImageVariant {
   width: number
   height: number
   fileSize: number
+  colorQuality: number
+  alphaQuality: number
 }

@@ -9,15 +9,13 @@ type StorageType = 'images' | 'videos' | 'svg'
  * local/images, local/videos, local/svg otherwise.
  */
 export function getR2Config(type: StorageType): R2StorageConfig {
-  const env =
-    process.env.PAYLOAD_ENV === 'production'
-      ? 'prod'
-      : process.env.PAYLOAD_ENV === 'test'
-        ? 'vitest'
-        : 'local'
+  const prefix =
+    process.env.PAYLOAD_ENV === 'test'
+      ? 'vitest'
+      : (process.env.R2_PREFIX || 'local')
   return {
     bucket: process.env.R2_BUCKET!,
-    prefix: `${env}/${type}`,
+    prefix: `${prefix}/${type}`,
     endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
     credentials: {
       accessKeyId: process.env.R2_ACCESS_KEY_ID!,

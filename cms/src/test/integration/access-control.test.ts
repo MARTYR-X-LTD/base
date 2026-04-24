@@ -121,7 +121,7 @@ describe('Media collection', () => {
     await expect(
       payload.delete({
         collection: 'media',
-        id: 'fake-id',
+        id: 999999999,
         overrideAccess: false,
         user: apiUser,
       }),
@@ -131,12 +131,13 @@ describe('Media collection', () => {
 
   test('admin passes delete access check on media', async () => {
     // Admin has delete access — error will be 404 (doc not found), not 403
+    // Use a numeric ID since media now uses Payload's default integer ID
     console.log('[access] admin → delete non-existent media → expect 404 (not 403)')
     const admin = await createAdminUser()
     await expect(
       payload.delete({
         collection: 'media',
-        id: 'fake-id-that-does-not-exist',
+        id: 999999999,
         overrideAccess: false,
         user: admin,
       }),

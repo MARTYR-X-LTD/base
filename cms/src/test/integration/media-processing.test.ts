@@ -89,6 +89,8 @@ describe.skipIf(!hasRealR2)('Media processing pipeline (real R2)', () => {
 
     // Document was created
     expect(doc.id).toBeDefined()
+    expect((doc as any).storageKey).toBeDefined()
+    expect((doc as any).storageKey).toMatch(/^[A-Za-z0-9_-]{21}$/) // nanoid default length
     expect(doc.filename).toContain('fragments-1')
     expect(doc.mimeType).toBe('image/avif') // input webp is converted to AVIF by mediaProcessor
 
@@ -98,6 +100,8 @@ describe.skipIf(!hasRealR2)('Media processing pipeline (real R2)', () => {
       width: number
       height: number
       fileSize: number
+      colorQuality: number
+      alphaQuality: number
     }>
 
     expect(Array.isArray(variants)).toBe(true)
@@ -107,9 +111,12 @@ describe.skipIf(!hasRealR2)('Media processing pipeline (real R2)', () => {
     for (const variant of variants) {
       expect(variant.url).toMatch(/^https?:\/\//)
       expect(variant.url).toContain('vitest/images') // PAYLOAD_ENV=test → vitest/ prefix
+      expect(variant.url).toContain((doc as any).storageKey) // storageKey is the R2 filename prefix
       expect(variant.width).toBeGreaterThan(0)
       expect(variant.height).toBeGreaterThan(0)
       expect(variant.fileSize).toBeGreaterThan(0)
+      expect(variant.colorQuality).toBeGreaterThan(0)
+      expect(variant.alphaQuality).toBeGreaterThan(0)
     }
 
     // At minimum we expect 600w and 1200w variants

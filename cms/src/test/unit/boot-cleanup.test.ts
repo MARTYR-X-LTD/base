@@ -35,14 +35,14 @@ import { runBootCleanup } from '@/instrumentation.node'
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function makePayload(overrides?: {
-  findByID?: (args: { id: string }) => Promise<unknown>
+  find?: (args: unknown) => Promise<unknown>
 }) {
   return {
     logger: {
       info: vi.fn(),
       error: vi.fn(),
     },
-    findByID: vi.fn(overrides?.findByID ?? (() => Promise.resolve({ id: 'x' }))),
+    find: vi.fn(overrides?.find ?? (() => Promise.resolve({ docs: [{ id: 1 }] }))),
   } as any
 }
 
@@ -60,7 +60,7 @@ describe('runBootCleanup', () => {
 
     await runBootCleanup(payload)
 
-    expect(payload.findByID).not.toHaveBeenCalled()
+    expect(payload.find).not.toHaveBeenCalled()
     expect(deleteTempFile).not.toHaveBeenCalled()
     expect(deleteMultipleFromR2).not.toHaveBeenCalled()
     expect(payload.logger.info).toHaveBeenCalledWith(expect.stringContaining('Found 0'))
@@ -73,13 +73,13 @@ describe('runBootCleanup', () => {
     vi.mocked(fs.readdir).mockResolvedValue(['abc123-original.jpg'] as any)
     vi.mocked(listR2Objects).mockResolvedValue([])
     const payload = makePayload({
-      findByID: () => Promise.resolve({ id: 'abc123' }),
+      find: () => Promise.resolve({ docs: [{ id: 1 }] }),
     })
 
     await runBootCleanup(payload)
 
-    expect(payload.findByID).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'abc123', collection: 'media' }),
+    expect(payload.find).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { storageKey: { equals: 'abc123' } }, collection: 'media' }),
     )
     expect(deleteTempFile).toHaveBeenCalledWith('/tmp/abc123-original.*')
     expect(listR2Objects).not.toHaveBeenCalled()
@@ -94,7 +94,7 @@ describe('runBootCleanup', () => {
       .mockResolvedValueOnce(['local/images/abc123-600w.avif', 'local/images/abc123-1200w.avif']) // image keys
       .mockResolvedValueOnce([]) // video keys
     const payload = makePayload({
-      findByID: () => Promise.reject({ status: 404 }),
+      find: () => Promise.resolve({ docs: [] }),
     })
 
     await runBootCleanup(payload)
@@ -117,7 +117,7 @@ describe('runBootCleanup', () => {
     vi.mocked(fs.readdir).mockResolvedValue(['abc123-original.jpg'] as any)
     vi.mocked(listR2Objects).mockResolvedValue([])
     const payload = makePayload({
-      findByID: () => Promise.reject({ status: 404 }),
+      find: () => Promise.resolve({ docs: [] }),
     })
 
     await runBootCleanup(payload)
@@ -131,7 +131,7 @@ describe('runBootCleanup', () => {
     console.log('[boot-cleanup] findByID throws 500 → log error, no cleanup')
     vi.mocked(fs.readdir).mockResolvedValue(['abc123-original.jpg'] as any)
     const payload = makePayload({
-      findByID: () => Promise.reject({ status: 500 }),
+      find: () => Promise.reject(new Error('DB connection failed')),
     })
 
     await runBootCleanup(payload)
@@ -172,7 +172,7 @@ describe('runBootCleanup', () => {
 
     await runBootCleanup(payload)
 
-    expect(payload.findByID).not.toHaveBeenCalled()
+    expect(payload.find).not.toHaveBeenCalled()
     expect(fs.unlink).not.toHaveBeenCalled()
     expect(deleteTempFile).not.toHaveBeenCalled()
     console.log('[boot-cleanup] ✓ no cleanup triggered')

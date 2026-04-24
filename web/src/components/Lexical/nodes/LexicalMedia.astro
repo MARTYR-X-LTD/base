@@ -13,8 +13,8 @@ if (typeof node.value === 'string') {
 }
 
 const media = typeof node.value !== 'string' ? node.value : null
-const isSVG = media?.mediaType === 'svg'
-const isVideo = media?.mediaType === 'video'
+const isSVG = media?.mimeType === 'image/svg+xml'
+const isVideo = media?.mimeType?.startsWith('video/')
 
 // Extract custom fields from node.fields (NOT from media object)
 // These are upload-specific overrides set in the Lexical editor

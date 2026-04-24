@@ -27,18 +27,19 @@ export async function runBootCleanup(payload: Payload): Promise<void> {
   // ── STEP 2: For each temp file, check if the document exists ───────────
   for (const docId of tempDocIds) {
     try {
-      await payload.findByID({ collection: 'media', id: docId, overrideAccess: true })
+      // Look up by storageKey (nanoid), not numeric id — temp filenames use the storageKey
+      const result = await payload.find({
+        collection: 'media',
+        where: { storageKey: { equals: docId } },
+        overrideAccess: true,
+        limit: 1,
+      })
 
-      // Document exists → upload completed, temp file is leftover
-      payload.logger.info(`[Boot] Doc ${docId} exists, removing orphaned temp file`)
-      await deleteTempFile(`/tmp/${docId}-original.*`)
-    } catch (err: unknown) {
-      const status =
-        typeof err === 'object' && err !== null && 'status' in err
-          ? (err as { status: number }).status
-          : null
-
-      if (status === 404) {
+      if (result.docs.length > 0) {
+        // Document exists → upload completed, temp file is leftover
+        payload.logger.info(`[Boot] Doc with storageKey ${docId} exists, removing orphaned temp file`)
+        await deleteTempFile(`/tmp/${docId}-original.*`)
+      } else {
         // Document doesn't exist → server crashed mid-upload, clean up R2 too
         payload.logger.info(`[Boot] Doc ${docId} not found — checking R2 for partial uploads`)
 
@@ -55,9 +56,9 @@ export async function runBootCleanup(payload: Payload): Promise<void> {
         }
 
         await deleteTempFile(`/tmp/${docId}-original.*`)
-      } else {
-        payload.logger.error(`[Boot] Error checking doc ${docId}: ${err}`)
       }
+    } catch (err: unknown) {
+      payload.logger.error(`[Boot] Error checking doc ${docId}: ${err}`)
     }
   }
 
