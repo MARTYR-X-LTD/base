@@ -50,7 +50,7 @@ export const Works: CollectionConfig = {
       type: 'relationship',
       relationTo: 'media',
       filterOptions: {
-        mediaType: { equals: 'image' },
+        mimeType: { contains: 'image/' },
       },
     },
     mediaGalleryField,

@@ -40,6 +40,7 @@ export default buildConfig({
       robots: 'noindex, nofollow',
     },
   },
+  folders: { browseByFolder: false },
   collections: [Users, Media, Works, StoreProducts, Categories, TagRegistry],
   endpoints: [
     {
