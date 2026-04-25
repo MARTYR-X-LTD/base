@@ -1,2 +1,11 @@
 // SCSS variables injected globally via astro.config.ts additionalData.
 // Add breakpoint vars and other SCSS $variables here as needed.
+
+// Home grid pop-in animation
+// These vars are used by vars-export.module.scss as a reference example of
+// the SCSS-to-JS export pattern. When porting to another project, replace
+// these with your own project-specific values and update the export module.
+$grid-stagger-min: 60ms;
+$grid-stagger-max: 340ms;
+$grid-pop-duration: 420ms;
+$grid-pop-easing: cubic-bezier(0.2, 0.9, 0.3, 1);

@@ -1,0 +1,15 @@
+// JavaScript export layer — SCSS variables accessible from TypeScript/JS.
+// Explicit @use here resolves via loadPaths; the auto-injected additionalData
+// provides the same namespace, and since both resolve to the same canonical
+// URL, SCSS deduplicates them.
+//
+// Reference example: the exported vars below are specific to zoe's home grid.
+// When porting this module to another project, replace them with your own
+// SCSS-to-JS exports and keep only the :export { ... } wrapper structure.
+
+:export {
+  GridStaggerMin: $grid-stagger-min;
+  GridStaggerMax: $grid-stagger-max;
+  GridPopDuration: $grid-pop-duration;
+  GridPopEasing: $grid-pop-easing;
+}
