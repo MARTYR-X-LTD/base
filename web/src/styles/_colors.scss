@@ -60,14 +60,47 @@
     // COMPONENTS
     // =========================================================================
 
+    // ── Button ────────────────────────────────────────────────────────────────
+
     --button_primary--bg: var(--accent);
     --button_primary--color: var(--surface);
+    --button_primary__hover--bg: var(--accent-muted);
 
     --button_ghost--bg: transparent;
+    --button_ghost--color: var(--text);
     --button_ghost__hover--bg: rgba(255, 255, 255, 0.06);
     --button_ghost__pressed--bg: rgba(255, 255, 255, 0.1);
 
+    --button_danger--color: #ff6b6b;
+    --button_danger__hover--bg: rgba(255, 107, 107, 0.1);
+
     --button_icon-circle__hover--bg: rgba(255, 255, 255, 0.08);
+
+    // ── Slider ───────────────────────────────────────────────────────────────
+
+    --slider--bg: var(--border);
+    --slider--accent: var(--accent);
+
+    // ── Switch ───────────────────────────────────────────────────────────────
+
+    --switch__off--bg: var(--border);
+    --switch__on--bg: var(--accent);
+    --switch-thumb--bg: var(--surface);
+
+    // ── Popover ──────────────────────────────────────────────────────────────
+
+    --popover--bg: var(--surface-raised);
+    --popover--border: 1px solid var(--border);
+    --popover--shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+
+    // ── Dialog ───────────────────────────────────────────────────────────────
+
+    --dialog-overlay--bg: rgba(0, 0, 0, 0.6);
+    --dialog--bg: var(--surface-raised);
+    --dialog--border: 1px solid var(--border);
+    --dialog--shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+
+    // ── Swiper ───────────────────────────────────────────────────────────────
 
     --swiper-bullet--bg: var(--border);
     --swiper-bullet__selected--bg: var(--accent);

@@ -5,7 +5,7 @@
 
 	type Props = WithoutChild<Button.RootProps> & {
 		children?: Snippet
-		variant: 'primary' | 'ghost' | 'icon-circle'
+		variant: 'primary' | 'ghost' | 'icon-circle' | 'danger'
 	}
 
 	let { children, variant, ...allProps }: Props = $props()
@@ -82,11 +82,33 @@
 			}
 		}
 	}
+
+	.danger {
+		--v-color: var(--button_danger--color);
+
+		@include hover {
+			&:hover {
+				--v-background: var(--button_danger__hover--bg);
+			}
+		}
+
+		@include coarse {
+			&:active {
+				--v-background: var(--button_danger__hover--bg);
+			}
+		}
+	}
+
+	.button[data-disabled='true'] :global([data-button-root]) {
+		--v-opacity: 0.45;
+		cursor: not-allowed;
+	}
 }
 
 @layer a11y {
 	.primary,
-	.ghost {
+	.ghost,
+	.danger {
 		@include focus-visible-root {
 			--v-box-shadow: inset 0 0 0 3px var(--text);
 		}
