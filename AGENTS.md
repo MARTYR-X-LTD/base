@@ -41,16 +41,16 @@ This flags the commit for later backporting to `MARTYR-X-LTD/base`. See `docs/ba
 
 ## Working from Root
 
-Always run Claude Code from the monorepo root (wherever `monk/` is cloned), even for frontend-only or CMS-only work. Git is at the root, and Claude loads all CLAUDE.md files correctly from here.
+Always run from the monorepo root (wherever `monk/` is cloned), even for frontend-only or CMS-only work. Git is at the root, and Claude loads all AGENTS.md files correctly from here.
 
-Subproject CLAUDE.md files are authoritative for their domain — read them before working in those areas:
-- `web/CLAUDE.md` — frontend patterns, tech stack, key gotchas
-- `cms/CLAUDE.md` — CMS patterns, migrations, access control, deployment
+Subproject AGENTS.md files are authoritative for their domain — read them before working in those areas:
+- `web/AGENTS.md` — frontend patterns, tech stack, key gotchas
+- `cms/AGENTS.md` — CMS patterns, migrations, access control, deployment
 
 ## Project Structure
 
-- `web/` — Astro 6.1 frontend, SSR on Cloudflare Workers. See `web/CLAUDE.md`.
-- `cms/` — Payload CMS, Docker deployed to Coolify VPS. See `cms/CLAUDE.md`.
+- `web/` — Astro 6.1 frontend, SSR on Cloudflare Workers. See `web/AGENTS.md`.
+- `cms/` — Payload CMS, Docker deployed to Coolify VPS. See `cms/AGENTS.md`.
 - `docs/` — All project documentation (see Docs section below).
 
 ## Environment
@@ -59,7 +59,7 @@ Development happens on both macOS and Linux. Be mindful of platform differences:
 
 ## Tooling
 
-- Use **Context7 MCP** to fetch current library docs before writing integration code.
+- Use the `find-docs` skill to fetch current library docs before writing integration code.
 - Use `/superpowers` skills: `subagent-driven-development`, `writing-plans`, `brainstorming`, `verification-before-completion`.
 
 ## Rules
@@ -72,6 +72,8 @@ Never run `pnpm dev`, `pnpm preview`, or any long-running server. Instruct the u
 
 ### Environment files
 Never read `.env` files. Only `.env.example` files are safe to read if needed.
+
+The single `.env.example` lives at the **monorepo root**. `init.sh` symlinks it into `cms/` and `web/` so both subprojects share the same env vars without duplication. When adding a new env var, add it once to the root `.env.example` — it is automatically available to both subprojects.
 
 ### Node version
 Managed via `.node-version` files and `fnm`. Do not change Node versions manually.
