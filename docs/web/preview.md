@@ -13,6 +13,8 @@ Editors can preview unpublished (draft) content from the Payload admin UI. The r
 
 The preview URL is safe to copy and share. It contains a signed JWT — no master secret is exposed.
 
+For an alternative pattern that supports live edits (read-write, full token stored in cookie for middleware re-verification), see [Editor Pattern](editor-pattern.md).
+
 ## Security model
 
 | Property | Detail |

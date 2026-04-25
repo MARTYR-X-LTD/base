@@ -91,7 +91,7 @@ docs/
     web.md        — frontend dependency update guide
     cms.md        — CMS dependency update guide
   cms/            — CMS deep dives (Docker, R2, migrations, etc.)
-  web/            — Frontend deep dives (Cloudflare, caching, etc.)
+  web/            — Frontend deep dives (Cloudflare, caching, editor-pattern, etc.)
   superpowers/
     specs/        — design specs from brainstorming sessions
     plans/        — implementation plans

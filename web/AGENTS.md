@@ -91,6 +91,16 @@ payloadLoader<Work>({ ... })
 
 Cloudflare Workers config lives in `wrangler.jsonc`. Update `compatibility_date` when Cloudflare requires it. Env vars and secrets are managed via the Cloudflare dashboard (not wrangler CLI).
 
+### Editor Pattern
+
+For frontend pages that need live edits with write-back to Payload, see `docs/web/editor-pattern.md`. The pattern uses:
+- `src/utils/hmac-token.ts` — HMAC JWT verification (paired with `cms/src/lib/hmac-token.ts`)
+- `src/middleware.ts` — re-verifies editor cookie on every request
+- `/api/editor/enter` and `/api/editor/exit` — session management
+- `/api/editor/save` — auth-gated write proxy (CMS_API_KEY never reaches the browser)
+
+Draft preview (`/api/preview/enter`) and editor mode use the same `PREVIEW_SECRET` but different cookie strategies. See the doc for comparison.
+
 ### Fonts
 
 Astro Fonts API is in the stack but not yet configured. Planned: Roboto + designer TBD.

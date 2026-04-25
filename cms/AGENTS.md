@@ -81,6 +81,10 @@ PayloadCMS overwrites R2 URLs with local paths. Use `customUrl` field + `afterRe
 
 The `admin.preview` function on `Works` and `StoreProducts` signs a JWT using `PREVIEW_SECRET` (HMAC-SHA256, 24h expiry) and returns a URL pointing to the frontend's `/api/preview/enter`. Token signing lives in `src/lib/preview-token.ts`. Requires `FRONTEND_URL` in `.env`. See `docs/web/preview.md`.
 
+## Editor Token
+
+For pages requiring live edits (read-write from the frontend), use the HMAC signer in `src/lib/hmac-token.ts`. Same `PREVIEW_SECRET`, different payload shape (`{ role, doc, userId, exp }`). The token is stored in the frontend cookie for middleware re-verification. See `docs/web/editor-pattern.md`.
+
 ## Docs
 
 - **Updating dependencies:** see `docs/updating/cms.md`
