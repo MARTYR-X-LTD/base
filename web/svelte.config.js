@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url"
 import { vitePreprocess } from "@astrojs/svelte"
 
 export default {
@@ -12,8 +13,8 @@ export default {
       css: {
         preprocessorOptions: {
           scss: {
-            api: "modern-compiler",
-            additionalData: `@use "/src/styles/mixins" as *; @use "/src/styles/vars" as *;`,
+            additionalData: `@use "mixins" as *; @use "vars" as *;`,
+            loadPaths: [fileURLToPath(new URL('./src/styles', import.meta.url))],
           },
         },
       },
