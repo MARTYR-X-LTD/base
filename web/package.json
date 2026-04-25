@@ -9,7 +9,10 @@
     "dev:prod-cms": "astro dev --mode prod-cms",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "check": "npm-run-all --parallel check:astro check:svelte",
+    "check:astro": "astro check",
+    "check:svelte": "svelte-check --workspace ."
   },
   "dependencies": {
     "@astrojs/cloudflare": "^13.1.8",
@@ -25,7 +28,9 @@
   },
   "devDependencies": {
     "@payloadcms/richtext-lexical": "3.82.1",
+    "npm-run-all2": "^8.0.4",
     "sass": "^1.99.0",
+    "svelte-check": "^4.4.6",
     "typescript": "^5.8.3",
     "wrangler": "^4.83.0"
   }
