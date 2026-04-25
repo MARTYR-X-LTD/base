@@ -1,25 +1,39 @@
-interface PayloadLoaderOptions {
+import type { LiveLoader, LoadEntryContext, LoadCollectionContext } from 'astro/loaders'
+
+interface PayloadDoc {
+  id: number
+  updatedAt: string
+}
+
+interface PayloadLoaderOptions<TDoc extends PayloadDoc> {
   collection: string
   apiUrl: string
   apiKey: string
-  cacheTags: (doc: any) => string[]
+  cacheTags: (doc: TDoc) => string[]
   collectionTag: string
 }
 
-export function payloadLoader(options: PayloadLoaderOptions) {
+type PayloadEntryFilter = { id: string; draft?: boolean }
+type PayloadCollectionFilter = { draft?: boolean }
+
+export function payloadLoader<TDoc extends PayloadDoc>(
+  options: PayloadLoaderOptions<TDoc>,
+) {
   return {
-    async loadCollection({ cookies }: { cookies: any }) {
+    name: options.collection,
+
+    async loadCollection(
+      context: LoadCollectionContext<PayloadCollectionFilter>,
+    ) {
       if (!options.apiUrl || !options.apiKey) {
         console.warn(`[payload] Missing CMS_API_URL or CMS_API_KEY — skipping fetch for "${options.collection}"`)
         return { entries: [], cacheHint: { tags: [options.collectionTag] } }
       }
 
-      const isDraft = cookies?.get('draft')?.value === 'true'
-
       const params = new URLSearchParams({
         depth: '2',
         limit: '100',
-        ...(isDraft && { draft: 'true' }),
+        ...(context.filter?.draft && { draft: 'true' }),
       })
 
       const response = await fetch(
@@ -46,33 +60,38 @@ export function payloadLoader(options: PayloadLoaderOptions) {
         return { entries: [], cacheHint: { tags: [options.collectionTag] } }
       }
 
-      return {
-        entries: data.docs.map((doc: any) => ({
-          id: doc.id,
-          slug: doc.slug,
-          data: doc,
-        })),
-        cacheHint: {
-          tags: [
-            options.collectionTag,
-            ...data.docs.flatMap((doc: any) => options.cacheTags(doc)),
-          ],
-          ...(data.docs.length > 0 && {
+      const entries = data.docs.map((doc: TDoc) => ({
+        id: String(doc.id),
+        data: doc,
+      }))
+
+      const tags = [
+        options.collectionTag,
+        ...data.docs.flatMap((doc: TDoc) => options.cacheTags(doc)),
+      ]
+
+      const cacheHint = data.docs.length > 0
+        ? {
+            tags,
             lastModified: new Date(
-              Math.max(...data.docs.map((d: any) => new Date(d.updatedAt).getTime())),
+              Math.max(...data.docs.map((d: TDoc) => new Date(d.updatedAt).getTime())),
             ),
-          }),
-        },
-      }
+          }
+        : undefined
+
+      return { entries, cacheHint }
     },
 
-    async loadEntry({ slug, cookies }: { slug: string; cookies: any }) {
+    async loadEntry(
+      context: LoadEntryContext<PayloadEntryFilter>,
+    ) {
+      const slug = context.filter.id
+      const isDraft = context.filter.draft ?? false
+
       if (!options.apiUrl || !options.apiKey) {
         console.warn(`[payload] Missing CMS_API_URL or CMS_API_KEY — skipping fetch for "${options.collection}/${slug}"`)
-        return { entry: null, error: 'CMS not configured' }
+        return { error: new Error('CMS not configured') }
       }
-
-      const isDraft = cookies?.get('draft')?.value === 'true'
 
       const params = new URLSearchParams({
         depth: '2',
@@ -91,28 +110,25 @@ export function payloadLoader(options: PayloadLoaderOptions) {
 
       if (!response.ok) {
         console.warn(`[payload] ${response.status} ${response.statusText} — "${options.collection}/${slug}" entry fetch failed. Check CMS_API_KEY in .env`)
-        return { entry: null, error: 'Failed to fetch entry' }
+        return { error: new Error('Failed to fetch entry') }
       }
 
       const data = await response.json()
 
       if (data.docs.length === 0) {
-        return { entry: null, error: 'Entry not found' }
+        return { error: new Error('Entry not found') }
       }
 
-      const doc = data.docs[0]
+      const doc = data.docs[0] as TDoc
 
       return {
-        entry: {
-          id: doc.id,
-          slug: doc.slug,
-          data: doc,
-        },
+        id: String(doc.id),
+        data: doc,
         cacheHint: {
           tags: [options.collectionTag, ...options.cacheTags(doc)],
           lastModified: new Date(doc.updatedAt),
         },
       }
     },
-  }
+  } as LiveLoader<Record<string, unknown>, PayloadEntryFilter, PayloadCollectionFilter, Error>
 }

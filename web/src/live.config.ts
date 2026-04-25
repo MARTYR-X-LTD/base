@@ -1,12 +1,13 @@
 import { defineLiveCollection } from 'astro:content'
 import { z } from 'astro/zod'
+import type { Work, StoreProduct, Category } from '@cms/payload-types'
 import { payloadLoader } from './lib/loaders/payload'
 
 const API_URL = import.meta.env.CMS_API_URL
 const API_KEY = import.meta.env.CMS_API_KEY
 
 const works = defineLiveCollection({
-  loader: payloadLoader({
+  loader: payloadLoader<Work>({
     collection: 'works',
     apiUrl: API_URL,
     apiKey: API_KEY,
@@ -24,7 +25,7 @@ const works = defineLiveCollection({
 })
 
 const storeProducts = defineLiveCollection({
-  loader: payloadLoader({
+  loader: payloadLoader<StoreProduct>({
     collection: 'store-products',
     apiUrl: API_URL,
     apiKey: API_KEY,
@@ -41,7 +42,7 @@ const storeProducts = defineLiveCollection({
 })
 
 const categories = defineLiveCollection({
-  loader: payloadLoader({
+  loader: payloadLoader<Category>({
     collection: 'categories',
     apiUrl: API_URL,
     apiKey: API_KEY,

@@ -4,7 +4,8 @@ import Base from '@/layouts/Base.astro'
 
 export const prerender = false
 
-const { entries: works, cacheHint } = await getLiveCollection('works')
+const isDraft = Astro.cookies.get('draft')?.value === 'true'
+const { entries: works = [], cacheHint } = await getLiveCollection('works', { draft: isDraft })
 
 if (cacheHint) Astro.cache.set(cacheHint)
 Astro.cache.set({ maxAge: 31536000, swr: 3600, tags: ['works'] })

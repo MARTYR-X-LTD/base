@@ -5,7 +5,8 @@ import Base from '@/layouts/Base.astro'
 export const prerender = false
 
 const { slug } = Astro.params
-const { entry: product, error, cacheHint } = await getLiveEntry('storeProducts', slug!)
+const isDraft = Astro.cookies.get('draft')?.value === 'true'
+const { entry: product, error, cacheHint } = await getLiveEntry('storeProducts', { id: slug!, draft: isDraft })
 
 if (error || !product) {
   return Astro.rewrite('/404')
@@ -14,7 +15,7 @@ if (error || !product) {
 if (cacheHint) Astro.cache.set(cacheHint)
 Astro.cache.set({ maxAge: 600, swr: 60, tags: [`product-${product.data.slug}`, 'products'] })
 
-const { title, featuredImage, mediaGallery, infoPanel } = product.data
+const { title, mediaGallery, infoPanel } = product.data
 ---
 
 <Base title={`${title} — mönk`}>
