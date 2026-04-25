@@ -8,7 +8,8 @@ Editors can preview unpublished (draft) content from the Payload admin UI. The r
 2. Click the **Preview** button (top-right of the edit view)
 3. A new tab opens at `/api/preview/enter?token=<jwt>`
 4. The frontend validates the token, sets a `draft=true` cookie, and redirects to the content page
-5. The page fetches draft content from Payload (unpublished changes included)
+5. The page reads `Astro.cookies.get('draft')` and passes `draft: true` through the live loader filter
+6. The Payload CMS loader appends `?draft=true` to the API call, returning unpublished changes
 
 The preview URL is safe to copy and share. It contains a signed JWT — no master secret is exposed.
 
@@ -43,4 +44,4 @@ FRONTEND_URL=https://monk.dev    # CMS uses this to build the preview URL (cms o
 | `web/src/utils/preview-token.ts` | Verifies the JWT (Cloudflare Workers `crypto.subtle`) |
 | `web/src/pages/api/preview/enter.ts` | Validates token, sets `draft` cookie, redirects |
 | `web/src/pages/api/preview/exit.ts` | Clears the `draft` cookie |
-| `web/src/lib/loaders/payload.ts` | Reads the `draft` cookie to fetch draft content |
+| `web/src/lib/loaders/payload.ts` | Reads `context.filter.draft` to fetch draft content |

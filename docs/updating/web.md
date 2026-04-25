@@ -2,7 +2,7 @@
 
 ## Workflow
 
-1. Fetch changelogs for major dependencies (Astro, Svelte, bits-ui, swiper, etc.) via Context7 MCP
+1. Fetch changelogs for major dependencies (Astro, Svelte, bits-ui, swiper, etc.) via the `find-docs` skill
 2. Update dependencies in `web/package.json`
 3. Run `pnpm install` in `web/`
 4. Test:

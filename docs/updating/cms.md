@@ -2,7 +2,7 @@
 
 ## Workflow
 
-1. Fetch changelogs for major dependencies (Payload CMS, PostgreSQL adapter, etc.) via Context7 MCP
+1. Fetch changelogs for major dependencies (Payload CMS, PostgreSQL adapter, etc.) via the `find-docs` skill
 2. In `cms/`:
    ```bash
    rm -rf node_modules
@@ -31,12 +31,12 @@
 - **payload** — breaking changes in collections, hooks, editor config
 - **@payloadcms/db-postgres** — migration compatibility
 - **@payloadcms/richtext-lexical** — editor feature changes
-- **@payloadcms/storage-s3** — R2 integration
+- **@aws-sdk/client-s3** — R2 integration (via custom media-processor/svg-processor plugins; `@payloadcms/storage-s3` is not used)
 - **sharp** — image processing compatibility
 
 ## PostgreSQL
 
-Using PostgreSQL 18. Container: `monk-postgres` via `docker-compose.yml`.
+Using PostgreSQL 18. Container name is auto-generated from `docker-compose.yml` (service name `postgres`).
 
 ## Docker
 
