@@ -10,6 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "check": "npm-run-all --parallel check:astro check:svelte",
     "check:astro": "astro check",
     "check:svelte": "svelte-check --workspace ."
@@ -32,6 +34,7 @@
     "sass": "^1.99.0",
     "svelte-check": "^4.4.6",
     "typescript": "^5.8.3",
+    "vitest": "^4.1.4",
     "wrangler": "^4.83.0"
   }
 }
