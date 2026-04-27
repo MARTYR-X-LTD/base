@@ -1,6 +1,7 @@
 ---
 import { ClientRouter } from 'astro:transitions'
 import { SEO } from 'astro-seo'
+import UmamiOptOut from '@/components/Scripts/UmamiOptOut.astro'
 
 // SCSS imports — order matters for @layer cascade
 import '@/styles/_layers.scss'
@@ -41,6 +42,19 @@ const canonicalURL = Astro.site
       }}
       noindex={noindex}
     />
+    {/* Umami opt-out: ?umami=off to disable tracking, ?umami=on to re-enable */}
+    <UmamiOptOut />
+    {/* Umami analytics — natively tracks SPA navigation via pushState/popState */}
+    {
+      import.meta.env.PUBLIC_UMAMI_WEBSITE_ID && (
+        <script
+          is:inline
+          defer
+          src="https://pulse.o3.malejandro.com/script.js"
+          data-website-id={import.meta.env.PUBLIC_UMAMI_WEBSITE_ID}
+        />
+      )
+    }
     <ClientRouter fallback="swap" />
   </head>
   <body>

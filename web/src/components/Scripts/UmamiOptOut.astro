@@ -1,0 +1,21 @@
+---
+// Visit ?umami=off to stop tracking yourself, ?umami=on to resume.
+// Runs before Umami loads so the disabled flag is already set when it initializes.
+---
+
+<script is:inline>
+	;(function () {
+		const p = new URLSearchParams(location.search)
+		const v = p.get('umami')
+		if (v === 'off') {
+			localStorage.setItem('umami.disabled', '1')
+		} else if (v === 'on') {
+			localStorage.removeItem('umami.disabled')
+		}
+		if (v === 'off' || v === 'on') {
+			p.delete('umami')
+			const qs = p.toString()
+			history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''))
+		}
+	})()
+</script>
