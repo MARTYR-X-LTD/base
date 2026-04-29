@@ -71,6 +71,8 @@ Order matters — layers must come first for proper CSS cascade:
 
 ### Svelte 5
 
+**Before writing, editing, or reviewing any `.svelte` file or `.svelte.ts`/`.svelte.js` module, you MUST load the `svelte-code-writer` and `svelte-core-bestpractices` skills.** These provide access to the Svelte MCP tools (`svelte-autofixer`, `list-sections`, `get-documentation`) and authoritative best-practice guidance. The autofixer in particular catches runes mistakes, state reactivity issues, and style violations that are easy to miss. Do not rely on training-data memory for Svelte 5 APIs — they have moved.
+
 Use runes everywhere. Be allergic to `$effect()` — if you think you need it, find a `$derived` approach instead.
 
 - `const { x, y } = $props()` — destructure props
@@ -80,7 +82,7 @@ Use runes everywhere. Be allergic to `$effect()` — if you think you need it, f
 - Mutate Sets/Maps immutably: `poppedIds = new Set([...poppedIds, id])` — mutating in place doesn't trigger reactivity
 - `onMount` is acceptable only for imperative browser APIs (ResizeObserver, IntersectionObserver, timers) that genuinely need lifecycle hooks
 - Reference project for bits-ui and Svelte 5 patterns: `~/martyr/martyrio/web/`
-- For Svelte 5 / SvelteKit APIs, use the Svelte MCP tools (runes, routing, lifecycle). For bits-ui, fetch `/llms.txt` pages via webfetch — see Bits-ui First section above.
+- For Svelte 5 / SvelteKit APIs beyond what the skills cover, use the Svelte MCP tools (`list-sections`, `get-documentation`) via the loaded skills. For bits-ui, fetch /llms.txt pages via webfetch — see Bits-ui First section above.
 
 ### CMS Types
 
