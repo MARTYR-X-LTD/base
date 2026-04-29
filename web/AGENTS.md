@@ -21,6 +21,36 @@ pnpm preview      # Preview production build locally
 - **Caching:** Astro experimental route caching + Cloudflare CDN cache-tag invalidation
 - **Content:** Live Content Collections with custom Payload CMS loader
 
+## Bits-ui First
+
+**Before writing any interactive UI element** — in Svelte OR Astro — check if bits-ui provides a headless foundation for it. bits-ui has 40+ components (accordion, select, combobox, radio group, switch, toggle, dialog, popover, tooltip, dropdown menu, tabs, etc.) that solve accessibility, keyboard navigation, and state management that raw HTML or a quick custom element would miss.
+
+### Discovery
+
+Fetch the full component index:
+
+```
+webfetch https://bits-ui.com/llms.txt
+```
+
+This returns every component, utility, and type helper with direct `/llms.txt` URLs.
+
+### Fetching a component's API
+
+Once identified, fetch the full page in one shot:
+
+```
+webfetch https://bits-ui.com/docs/components/{component}/llms.txt
+```
+
+One fetch gives you the complete API surface — all props, data attributes, CSS variables, examples, snippets. This is **more thorough than multiple ctx7 queries** and lets you discover capabilities you didn't know to search for (e.g., `forceMount`, `data-starting-style`, CSS variable hooks).
+
+### Decision tree
+
+1. **bits-ui has it?** → Fetch `/llms.txt` → wrap with our conventions in `src/components/ui/` (see `docs/web/frontend-guidelines.md`)
+2. **bits-ui doesn't have it?** → Check martyrio (`~/martyr/martyrio/web/`) → port and adapt
+3. **Neither?** → Build from scratch following the patterns in `docs/web/frontend-guidelines.md`
+
 ## Frontend Guidelines
 
 **Before writing Svelte/SCSS, read `docs/web/frontend-guidelines.md`.** It covers the conventions we've learned the hard way — `$effect` as last resort, bits-ui `child` snippet pattern, when `:global()` is acceptable, token naming, martyrio porting. Ignoring these leads to rework.
@@ -50,7 +80,7 @@ Use runes everywhere. Be allergic to `$effect()` — if you think you need it, f
 - Mutate Sets/Maps immutably: `poppedIds = new Set([...poppedIds, id])` — mutating in place doesn't trigger reactivity
 - `onMount` is acceptable only for imperative browser APIs (ResizeObserver, IntersectionObserver, timers) that genuinely need lifecycle hooks
 - Reference project for bits-ui and Svelte 5 patterns: `~/martyr/martyrio/web/`
-- Always use the `find-docs` skill to fetch current Svelte 5 or bits-ui docs before writing code — APIs evolve and training data may be stale
+- For Svelte 5 / SvelteKit APIs, use the Svelte MCP tools (runes, routing, lifecycle). For bits-ui, fetch `/llms.txt` pages via webfetch — see Bits-ui First section above.
 
 ### CMS Types
 

@@ -42,7 +42,7 @@ Svelte 5's `$effect` is tempting but almost always the wrong tool. Before reachi
 {/if}
 ```
 
-When docs are unclear, use the `find-docs` skill to fetch current Svelte 5 docs. Do not rely on training-data memory for the runes API — it has moved.
+When docs are unclear, use the Svelte MCP tools (`list-sections`, `get-documentation`) to fetch current Svelte 5 docs. Do not rely on training-data memory for the runes API — it has moved.
 
 ---
 
@@ -106,6 +106,86 @@ Some components (Button is the notable one in our codebase) do **not** expose a 
 
 Split floating components into a `Root` and `Content` file (`PopoverRoot.svelte` + `PopoverContent.svelte`, `DialogRoot.svelte` + `DialogContent.svelte`) so consumers compose them with `<Popover.Trigger>` in between. Mirrors martyrio.
 
+### forceMount + Svelte transitions
+
+Portal'd/floating content (Dialog, Popover, Tooltip, etc.) needs `forceMount={true}` + the `{#if open}` gate in the `child` snippet for Svelte transitions to work. Without `forceMount`, the component unmounts before the out-transition finishes.
+
+```svelte
+<Dialog.Content forceMount>
+  {#snippet child({ props, open })}
+    {#if open}
+      <div {...props} transition:fly={{ y: -20 }}>
+        {@render children?.()}
+      </div>
+    {/if}
+  {/snippet}
+</Dialog.Content>
+```
+
+For floating components that use `wrapperProps`, apply the transition to the inner content element:
+
+```svelte
+<Popover.Content forceMount>
+  {#snippet child({ wrapperProps, props, open })}
+    {#if open}
+      <div {...wrapperProps}>
+        <div {...props} transition:fade>{@render children?.()}</div>
+      </div>
+    {/if}
+  {/snippet}
+</Popover.Content>
+```
+
+### Ref pattern
+
+Use `bind:ref` on bits-ui components to get a reference to the underlying DOM element. Works through `child` snippets automatically (bits-ui uses element IDs internally).
+
+```svelte
+<script lang="ts">
+  let triggerRef = $state<HTMLButtonElement | null>(null)
+</script>
+<Accordion.Trigger bind:ref={triggerRef}>
+  {#snippet child({ props })}
+    <button {...props}>Item</button>
+  {/snippet}
+</Accordion.Trigger>
+```
+
+To make your own wrapper components expose the same ref pattern, use the `WithElementRef` type helper:
+
+```svelte
+<script lang="ts">
+  import { WithElementRef } from 'bits-ui'
+
+  let {
+    ref = $bindable(null),
+    ...rest
+  }: WithElementRef<Button.RootProps, HTMLButtonElement> = $props()
+</script>
+<button bind:this={ref} {...rest}>
+  {@render children?.()}
+</button>
+```
+
+### State function binding
+
+For gated/conditional state updates (validation, debouncing, external state), use Svelte's function-binding form with bits-ui's bindable props:
+
+```svelte
+<script lang="ts">
+  let value = $state('')
+  function getValue() { return value }
+  function setValue(v: string) {
+    if (isValid(v)) value = v
+  }
+</script>
+<Select.Root bind:value={getValue, setValue}>
+  ...
+</Select.Root>
+```
+
+This applies to any bindable prop (`value`, `open`, `checked`, etc.).
+
 ---
 
 ## 3. Styling conventions
@@ -166,6 +246,33 @@ Button uses a variant-slot pattern: the base rule declares a handful of `--v-*` 
 
 Nice because focus-visible, disabled, and state overrides all set the same slots without fighting specificity.
 
+### bits-ui data attributes and CSS variables
+
+bits-ui components expose `data-*` attributes per-element (e.g., `data-accordion-trigger`, `data-select-content`) and CSS variables for dynamic values (`--bits-accordion-content-height`, `--bits-select-anchor-width`). Use these for animations and sizing:
+
+```scss
+[data-accordion-content] {
+  overflow: hidden;
+  transition: height 300ms ease;
+  height: var(--bits-accordion-content-height);
+}
+```
+
+For mount-managed surfaces (popovers, dialogs, tooltips), bits-ui sets transient `data-starting-style` and `data-ending-style` attributes — use them for CSS-only enter/exit transitions without `forceMount`:
+
+```scss
+[data-popover-content] {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 150ms, transform 150ms;
+}
+[data-popover-content][data-starting-style],
+[data-popover-content][data-ending-style] {
+  opacity: 0;
+  transform: scale(0.96);
+}
+```
+
 ---
 
 ## 4. Component layout
@@ -200,8 +307,9 @@ When a new primitive is needed, check martyrio first (`~/martyr/martyrio/web/src
 
 ---
 
-## 6. Before you touch a Svelte file, ask:
+## 6. Before you build an interactive UI element, ask:
 
+0. **Does bits-ui already have this component?** Fetch `bits-ui.com/llms.txt` and check the component index. If yes, don't write raw HTML — wrap the bits-ui primitive.
 1. Am I about to write `$effect`? Can I use `$derived`/`$derived.by`/`$bindable` instead?
 2. Does this bits-ui component expose a `child` snippet? Use it.
 3. Am I writing `:global(.some-class)`? Stop — either use `child` or target a bits-ui `data-*` attribute.

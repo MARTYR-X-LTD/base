@@ -44,6 +44,11 @@ Tests upload to the `vitest/` prefix in R2 (`vitest/images/`, `vitest/videos/`),
 - **Media:** Custom media-processor (AVIF) + svg-processor plugins
 - **Deployment:** Docker → GHCR → Coolify VPS (Germany)
 
+## Tooling
+
+- The **payload skill** (`.agents/skills/payload/`) is auto-loaded by opencode. It covers collection patterns, hooks, access control, queries, security pitfalls (local API bypass, transactions, hook loops), and best practices. Use it before writing any CMS code.
+- For Payload API details beyond what the skill covers, fetch the overview index at `payloadcms.com/llms.txt` via webfetch first — it lists every section with direct URLs to drill into. Do NOT fetch `llms-full.txt` — it's massive and will implode the context window. Prefer webfetch over `find-docs` (ctx7).
+
 ## Critical Gotchas
 
 ### Always pass `req` to Local API

@@ -59,7 +59,7 @@ Development happens on both macOS and Linux. Be mindful of platform differences:
 
 ## Tooling
 
-- Use the `find-docs` skill to fetch current library docs before writing integration code.
+- Use the `find-docs` skill for libraries NOT covered by more specific tooling: Payload CMS, swiper.js, Cloudflare/Wrangler, Astro config APIs, and other non-Svelte, non-bits-ui dependencies. For Svelte 5 / SvelteKit, use the Svelte MCP tools. For bits-ui, fetch `/llms.txt` pages via webfetch (see `web/AGENTS.md`).
 - Use `/superpowers` skills: `subagent-driven-development`, `writing-plans`, `brainstorming`, `verification-before-completion`.
 
 ## Rules
@@ -90,6 +90,7 @@ docs/
   updating/
     web.md        — frontend dependency update guide
     cms.md        — CMS dependency update guide
+    skills.md     — skill update guide
   cms/            — CMS deep dives (Docker, R2, migrations, etc.)
   web/            — Frontend deep dives (Cloudflare, caching, editor-pattern, etc.)
   superpowers/
