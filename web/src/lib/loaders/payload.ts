@@ -7,128 +7,110 @@ interface PayloadDoc {
 
 interface PayloadLoaderOptions<TDoc extends PayloadDoc> {
   collection: string
-  apiUrl: string
-  apiKey: string
   cacheTags: (doc: TDoc) => string[]
   collectionTag: string
+  sort?: string
 }
 
 type PayloadEntryFilter = { id: string; draft?: boolean }
 type PayloadCollectionFilter = { draft?: boolean }
 
+// Detects whether a type is a Payload relationship field (union that includes an object type).
+// Distinguishes `number | Media | null` (relationship) from `number | null` (plain optional number).
+type IsRelation<T> = [true] extends [T extends object ? true : never] ? true : false
+
+// Recursively strips unpopulated `number` IDs from relationship fields, leaving
+// plain number fields (id, width, order, etc.) untouched.
+export type Populated<T> =
+  T extends (infer U)[]
+    ? Populated<U>[]
+    : T extends object
+    ? { [K in keyof T]: IsRelation<T[K]> extends true ? Populated<Exclude<T[K], number>> : Populated<T[K]> }
+    : T
+
 export function payloadLoader<TDoc extends PayloadDoc>(
   options: PayloadLoaderOptions<TDoc>,
 ) {
+  const apiUrl = import.meta.env.CMS_API_URL
+  const apiKey = import.meta.env.CMS_API_KEY
+
+  async function fetchPayload(params: URLSearchParams): Promise<Response | null> {
+    if (!apiUrl || !apiKey) {
+      console.warn(`[payload] Missing CMS_API_URL or CMS_API_KEY — skipping fetch for "${options.collection}"`)
+      return null
+    }
+    return fetch(`${apiUrl}/${options.collection}?${params}`, {
+      headers: { Authorization: `users API-Key ${apiKey}` },
+    })
+  }
+
+  function mapEntry(doc: TDoc) {
+    return {
+      id: String(doc.id),
+      data: doc as Populated<TDoc>,
+      cacheHint: {
+        tags: [options.collectionTag, ...options.cacheTags(doc)],
+        lastModified: new Date(doc.updatedAt),
+      },
+    }
+  }
+
   return {
     name: options.collection,
 
-    async loadCollection(
-      context: LoadCollectionContext<PayloadCollectionFilter>,
-    ) {
-      if (!options.apiUrl || !options.apiKey) {
-        console.warn(`[payload] Missing CMS_API_URL or CMS_API_KEY — skipping fetch for "${options.collection}"`)
-        return { entries: [], cacheHint: { tags: [options.collectionTag] } }
-      }
-
+    async loadCollection(context: LoadCollectionContext<PayloadCollectionFilter>) {
       const params = new URLSearchParams({
         depth: '2',
         limit: '100',
+        ...(options.sort && { sort: options.sort }),
         ...(context.filter?.draft && { draft: 'true' }),
       })
 
-      const response = await fetch(
-        `${options.apiUrl}/${options.collection}?${params}`,
-        {
-          headers: {
-            Authorization: `users API-Key ${options.apiKey}`,
-          },
-        },
-      )
+      const response = await fetchPayload(params)
+      if (!response) return { entries: [], cacheHint: { tags: [options.collectionTag] } }
 
       if (!response.ok) {
-        console.warn(`[payload] ${response.status} ${response.statusText} — "${options.collection}" collection fetch failed. Check CMS_API_KEY in .env`)
-        return {
-          entries: [],
-          cacheHint: { tags: [options.collectionTag] },
-        }
+        console.warn(`[payload] ${response.status} ${response.statusText} — "${options.collection}" fetch failed`)
+        return { entries: [], cacheHint: { tags: [options.collectionTag] } }
       }
 
       const data = await response.json()
-
       if (!data.docs) {
         console.warn(`[payload] Unexpected response shape for "${options.collection}":`, JSON.stringify(data))
         return { entries: [], cacheHint: { tags: [options.collectionTag] } }
       }
 
-      const entries = data.docs.map((doc: TDoc) => ({
-        id: String(doc.id),
-        data: doc,
-      }))
-
-      const tags = [
-        options.collectionTag,
-        ...data.docs.flatMap((doc: TDoc) => options.cacheTags(doc)),
-      ]
-
-      const cacheHint = data.docs.length > 0
+      const docs: TDoc[] = data.docs
+      const cacheHint = docs.length > 0
         ? {
-            tags,
-            lastModified: new Date(
-              Math.max(...data.docs.map((d: TDoc) => new Date(d.updatedAt).getTime())),
-            ),
+            tags: [options.collectionTag, ...docs.flatMap(options.cacheTags)],
+            lastModified: new Date(Math.max(...docs.map(d => new Date(d.updatedAt).getTime()))),
           }
         : undefined
 
-      return { entries, cacheHint }
+      return { entries: docs.map(mapEntry), cacheHint }
     },
 
-    async loadEntry(
-      context: LoadEntryContext<PayloadEntryFilter>,
-    ) {
+    async loadEntry(context: LoadEntryContext<PayloadEntryFilter>) {
       const slug = context.filter.id
-      const isDraft = context.filter.draft ?? false
-
-      if (!options.apiUrl || !options.apiKey) {
-        console.warn(`[payload] Missing CMS_API_URL or CMS_API_KEY — skipping fetch for "${options.collection}/${slug}"`)
-        return { error: new Error('CMS not configured') }
-      }
-
       const params = new URLSearchParams({
         depth: '2',
         'where[slug][equals]': slug,
-        ...(isDraft && { draft: 'true' }),
+        ...(context.filter.draft && { draft: 'true' }),
       })
 
-      const response = await fetch(
-        `${options.apiUrl}/${options.collection}?${params}`,
-        {
-          headers: {
-            Authorization: `users API-Key ${options.apiKey}`,
-          },
-        },
-      )
+      const response = await fetchPayload(params)
+      if (!response) return { error: new Error('CMS not configured') }
 
       if (!response.ok) {
-        console.warn(`[payload] ${response.status} ${response.statusText} — "${options.collection}/${slug}" entry fetch failed. Check CMS_API_KEY in .env`)
+        console.warn(`[payload] ${response.status} ${response.statusText} — "${options.collection}/${slug}" fetch failed`)
         return { error: new Error('Failed to fetch entry') }
       }
 
       const data = await response.json()
+      if (!data.docs?.length) return { error: new Error('Entry not found') }
 
-      if (data.docs.length === 0) {
-        return { error: new Error('Entry not found') }
-      }
-
-      const doc = data.docs[0] as TDoc
-
-      return {
-        id: String(doc.id),
-        data: doc,
-        cacheHint: {
-          tags: [options.collectionTag, ...options.cacheTags(doc)],
-          lastModified: new Date(doc.updatedAt),
-        },
-      }
+      return mapEntry(data.docs[0] as TDoc)
     },
-  } as LiveLoader<Record<string, unknown>, PayloadEntryFilter, PayloadCollectionFilter, Error>
+  } as LiveLoader<Populated<TDoc>, PayloadEntryFilter, PayloadCollectionFilter, Error>
 }

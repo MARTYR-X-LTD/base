@@ -12,18 +12,9 @@
 // full token in httpOnly cookie → middleware reads cookie, calls verifyHmacToken
 // on every request → if valid, grants write access.
 
+import { base64urlDecodeToString, base64urlDecodeToBuffer } from '@/utils/base64url'
+
 const ALGO = { name: 'HMAC', hash: 'SHA-256' }
-
-function base64urlDecodeToString(str: string): string {
-  return atob(str.replace(/-/g, '+').replace(/_/g, '/'))
-}
-
-function base64urlDecodeToBuffer(str: string): ArrayBuffer {
-  const binary = atob(str.replace(/-/g, '+').replace(/_/g, '/'))
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-  return bytes.buffer
-}
 
 export interface HmacTokenPayload {
   role: string

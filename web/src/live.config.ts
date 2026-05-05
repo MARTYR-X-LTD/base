@@ -1,58 +1,42 @@
 import { defineLiveCollection } from 'astro:content'
-import { z } from 'astro/zod'
-import type { Work, StoreProduct, Category } from '@cms/payload-types'
+import type { LiveLoader } from 'astro/loaders'
+import type {
+  Work as PayloadWork,
+  StoreProduct as PayloadStoreProduct,
+  Category as PayloadCategory,
+} from '@cms/payload-types'
 import { payloadLoader } from './lib/loaders/payload'
 
-const API_URL = import.meta.env.CMS_API_URL
-const API_KEY = import.meta.env.CMS_API_KEY
+type LiveData<T extends { loader: LiveLoader }> =
+  T['loader'] extends LiveLoader<infer D, any, any, any> ? D : never
 
 const works = defineLiveCollection({
-  loader: payloadLoader<Work>({
+  loader: payloadLoader<PayloadWork>({
     collection: 'works',
-    apiUrl: API_URL,
-    apiKey: API_KEY,
     cacheTags: (doc) => [`work-${doc.slug}`],
     collectionTag: 'works',
-  }),
-  schema: z.object({
-    slug: z.string(),
-    title: z.string(),
-    category: z.any().optional(),
-    featuredImage: z.any().optional(),
-    mediaGallery: z.any().optional(),
-    infoPanel: z.array(z.any()).optional(),
   }),
 })
 
 const storeProducts = defineLiveCollection({
-  loader: payloadLoader<StoreProduct>({
+  loader: payloadLoader<PayloadStoreProduct>({
     collection: 'store-products',
-    apiUrl: API_URL,
-    apiKey: API_KEY,
     cacheTags: (doc) => [`product-${doc.slug}`],
     collectionTag: 'products',
-  }),
-  schema: z.object({
-    slug: z.string(),
-    title: z.string(),
-    featuredImage: z.any().optional(),
-    mediaGallery: z.any().optional(),
-    infoPanel: z.array(z.any()).optional(),
   }),
 })
 
 const categories = defineLiveCollection({
-  loader: payloadLoader<Category>({
+  loader: payloadLoader<PayloadCategory>({
     collection: 'categories',
-    apiUrl: API_URL,
-    apiKey: API_KEY,
     cacheTags: (doc) => [`category-${doc.slug}`],
     collectionTag: 'categories',
-  }),
-  schema: z.object({
-    slug: z.string(),
-    name: z.string(),
   }),
 })
 
 export const collections = { works, storeProducts, categories }
+
+export type { LiveData }
+export type Work = LiveData<typeof works>
+export type Category = LiveData<typeof categories>
+export type StoreProduct = LiveData<typeof storeProducts>
