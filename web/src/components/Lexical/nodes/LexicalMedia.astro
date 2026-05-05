@@ -43,16 +43,13 @@ function mergeStyles(
   if (customCss) {
     customCss.split(';').forEach((rule) => {
       const trimmed = rule.trim()
-      if (!trimmed) { return }
-
       const colonIndex = trimmed.indexOf(':')
-      if (colonIndex === -1) { return }
-
-      const property = trimmed.substring(0, colonIndex).trim()
-      const value = trimmed.substring(colonIndex + 1).trim()
-
-      if (property && value) {
-        cssMap.set(property, value)
+      if (trimmed && colonIndex !== -1) {
+        const property = trimmed.substring(0, colonIndex).trim()
+        const value = trimmed.substring(colonIndex + 1).trim()
+        if (property && value) {
+          cssMap.set(property, value)
+        }
       }
     })
   }
